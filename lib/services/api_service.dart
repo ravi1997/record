@@ -1,11 +1,13 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:file_picker/file_picker.dart';
+import 'package:archive/archive.dart';
 
 class ApiService {
   // Base URL for the Flask backend
-  static const String baseUrl =
-      'http://localhost:5000'; // Adjust this to your Flask server URL
+  static String baseUrl =
+      'http://192.168.1.8:5000'; // Adjust this to your Flask server URL
 
   // Login with employee credentials
   static Future<Map<String, dynamic>?> loginWithEmployee(
@@ -60,9 +62,13 @@ class ApiService {
         body: jsonEncode({'mobile': mobileNumber, 'otp': otp}),
       );
 
-      if (response.statusCode == 20) {
+      if (response.statusCode == 200) {
         return jsonDecode(response.body);
       } else {
+        print('OTP verification failed: ${response.statusCode}');
+        print('Response: ${response.body}');
+        // In case of failure, we could implement local database fallback
+        // For now, return null
         return null;
       }
     } catch (e) {
@@ -92,13 +98,17 @@ class ApiService {
       request.fields['patient_name'] = patientName;
       request.fields['dob'] = dob;
 
-      // Add files
+      // Add compressed files
       for (var file in files) {
         if (file.bytes != null) {
+          // Compress the file data using gzip
+          List<int> originalData = file.bytes!;
+          List<int> compressedData = GZipEncoder().encode(originalData)!;
+
           request.files.add(
             http.MultipartFile.fromBytes(
               'files',
-              file.bytes!,
+              compressedData,
               filename: file.name,
             ),
           );
@@ -125,11 +135,13 @@ class ApiService {
   }) async {
     try {
       final response = await http.get(
-        Uri.parse('$baseUrl/patients/search?$searchType=$searchTerm'),
+        Uri.parse(
+          '$baseUrl/patients/search?search_type=$searchType&search_term=$searchTerm',
+        ),
         headers: {'Content-Type': 'application/json'},
       );
 
-      if (response.statusCode == 20) {
+      if (response.statusCode == 200) {
         List<dynamic> data = jsonDecode(response.body);
         return data.cast<Map<String, dynamic>>();
       } else {
@@ -151,9 +163,11 @@ class ApiService {
         headers: {'Content-Type': 'application/json'},
       );
 
-      if (response.statusCode == 20) {
+      if (response.statusCode == 200) {
         return jsonDecode(response.body);
       } else {
+        print('Get patient details failed: ${response.statusCode}');
+        print('Response: ${response.body}');
         return null;
       }
     } catch (e) {
@@ -170,10 +184,56 @@ class ApiService {
       if (response.statusCode == 200) {
         return response;
       } else {
+        print('Download file failed: ${response.statusCode}');
+        print('Response: ${response.body}');
         return null;
       }
     } catch (e) {
       print('Error downloading file: $e');
+      return null;
+    }
+  }
+
+  // Get the maximum file size limit from the backend
+  static Future<int> getMaxFileSize() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/config'),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['max_file_size'] ??
+            (5 * 1024 * 1024); // Default to 5MB if not provided
+      } else {
+        // Return default value if API call fails
+        return 5 * 1024 * 1024; // 5MB in bytes
+      }
+    } catch (e) {
+      print('Error fetching config: $e');
+      // Return default value if there's an error
+      return 5 * 1024 * 1024; // 5MB in bytes
+    }
+  }
+
+  // Sync local data with server
+  static Future<Map<String, dynamic>?> syncData() async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/sync'),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else {
+        print('Sync failed: ${response.statusCode}');
+        print('Response: ${response.body}');
+        return null;
+      }
+    } catch (e) {
+      print('Error during sync: $e');
       return null;
     }
   }

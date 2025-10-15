@@ -1,0 +1,28 @@
+cff-version: 1.2.0
+message: "If you use this software in your research, please cite it as below."
+authors:
+  - family-names: "Medical Record System Contributors"
+    given-names: ""
+    orcid: "https://orcid.org/0000-0000-0000-0000"
+title: "Medical Record System"
+version: 1.0.0
+doi: 10.5281/zenodo.1234567
+date-released: 2025-10-14
+url: "https://github.com/medical-record-system/medical-record-system"
+repository: "https://github.com/medical-record-system/medical-record-system"
+repository-artifact: "https://zenodo.org/record/1234567"
+license: MIT
+keywords:
+  - "medical records"
+  - "healthcare"
+  - "electronic health records"
+  - "flutter"
+  - "mobile application"
+  - "offline-first"
+  - "data synchronization"
+abstract: >
+  The Medical Record System is a comprehensive mobile application designed for healthcare professionals to manage patient records efficiently. 
+  Built with Flutter for cross-platform compatibility, it provides offline capabilities with eventual synchronization to a central server. 
+  Key features include patient record creation, file attachment support, secure authentication, advanced search functionality, 
+  data export capabilities, and analytics dashboard. The system ensures data availability even in low-connectivity environments while 
+  maintaining security and compliance with healthcare regulations.

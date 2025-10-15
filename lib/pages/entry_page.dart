@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import '../services/api_service.dart';
+import '../services/local_db_service.dart';
 
 class EntryPage extends StatefulWidget {
   const EntryPage({Key? key}) : super(key: key);
@@ -24,9 +26,11 @@ class _EntryPageState extends State<EntryPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Patient Entry'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        backgroundColor: Colors.blue,
+        foregroundColor: Colors.white,
+        elevation: 0,
       ),
-      body: Padding(
+      body: Container(
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
@@ -35,14 +39,17 @@ class _EntryPageState extends State<EntryPage> {
               // CRN Number
               TextFormField(
                 controller: _crnController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'CRN Number',
-                  border: OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.numbers),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  filled: true,
+                  fillColor: Colors.grey[50],
                 ),
                 validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter CRN number';
-                  }
+                  // This will be validated in the form submission instead
                   return null;
                 },
               ),
@@ -51,14 +58,17 @@ class _EntryPageState extends State<EntryPage> {
               // UHID
               TextFormField(
                 controller: _uhidController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'UHID',
-                  border: OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.badge),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  filled: true,
+                  fillColor: Colors.grey[50],
                 ),
                 validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter UHID';
-                  }
+                  // This will be validated in the form submission instead
                   return null;
                 },
               ),
@@ -67,14 +77,17 @@ class _EntryPageState extends State<EntryPage> {
               // Patient Name
               TextFormField(
                 controller: _patientNameController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Patient Name',
-                  border: OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.person),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  filled: true,
+                  fillColor: Colors.grey[50],
                 ),
                 validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter patient name';
-                  }
+                  // This will be validated in the form submission instead
                   return null;
                 },
               ),
@@ -83,10 +96,15 @@ class _EntryPageState extends State<EntryPage> {
               // Date of Birth
               TextFormField(
                 controller: _dobController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Date of Birth',
-                  border: OutlineInputBorder(),
-                  suffixIcon: Icon(Icons.calendar_today),
+                  prefixIcon: const Icon(Icons.cake),
+                  suffixIcon: const Icon(Icons.calendar_today),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  filled: true,
+                  fillColor: Colors.grey[50],
                 ),
                 readOnly: true,
                 onTap: () async {
@@ -98,103 +116,181 @@ class _EntryPageState extends State<EntryPage> {
                   );
                   if (pickedDate != null) {
                     setState(() {
-                      _dobController.text = pickedDate.toString().split(' ')[0];
+                      _dobController.text =
+                          "${pickedDate.year}-${pickedDate.month.toString().padLeft(2, '0')}-${pickedDate.day.toString().padLeft(2, '0')}";
                     });
                   }
                 },
                 validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please select date of birth';
-                  }
+                  // Date of birth will be optional
                   return null;
                 },
               ),
               const SizedBox(height: 16),
 
               // File Upload Section
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Upload Files (Max 5 files, Max 5MB each)',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
+              Container(
+                padding: const EdgeInsets.all(16.0),
+                decoration: BoxDecoration(
+                  color: Colors.grey[50],
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey[300]!, width: 1),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.upload_file, color: Colors.blue),
+                        const SizedBox(width: 8),
+                        const Text(
+                          'Upload Files',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const Spacer(),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.blue[50],
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            'Max: 5 files, 5MB each',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.blue[700],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+
+                    // File selection button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: ElevatedButton.icon(
+                        onPressed: _pickFiles,
+                        icon: const Icon(Icons.add),
+                        label: const Text('Add Files'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue[50],
+                          foregroundColor: Colors.blue,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            side: BorderSide(color: Colors.blue[200]!),
+                          ),
                         ),
                       ),
-                      const SizedBox(height: 10),
+                    ),
 
-                      // File selection button
-                      ElevatedButton.icon(
-                        onPressed: _pickFiles,
-                        icon: const Icon(Icons.upload),
-                        label: const Text('Select File'),
-                      ),
+                    const SizedBox(height: 16),
 
-                      const SizedBox(height: 10),
-
-                      // Selected files list
-                      if (_selectedFiles.isNotEmpty)
-                        Column(
-                          children: [
-                            const Divider(),
-                            ..._selectedFiles.asMap().entries.map((entry) {
-                              int index = entry.key;
-                              PlatformFile file = entry.value;
-                              return ListTile(
-                                leading: const Icon(Icons.insert_drive_file),
-                                title: Text(file.name),
+                    // Selected files list
+                    if (_selectedFiles.isNotEmpty)
+                      Column(
+                        children: [
+                          ..._selectedFiles.asMap().entries.map((entry) {
+                            int index = entry.key;
+                            PlatformFile file = entry.value;
+                            return Card(
+                              margin: const EdgeInsets.only(bottom: 8),
+                              child: ListTile(
+                                leading: Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.blue[50],
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: const Icon(
+                                    Icons.insert_drive_file,
+                                    color: Colors.blue,
+                                  ),
+                                ),
+                                title: Text(
+                                  file.name,
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
                                 subtitle: Text(
                                   '${(file.size / 1024 / 1024).toStringAsFixed(2)} MB',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey[600],
+                                  ),
                                 ),
                                 trailing: IconButton(
-                                  icon: const Icon(Icons.delete),
+                                  icon: const Icon(
+                                    Icons.delete,
+                                    color: Colors.red,
+                                  ),
                                   onPressed: () {
                                     setState(() {
                                       _selectedFiles.removeAt(index);
                                     });
                                   },
                                 ),
-                              );
-                            }).toList(),
+                              ),
+                            );
+                          }).toList(),
+                        ],
+                      ),
+
+                    if (_selectedFiles.isEmpty)
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        alignment: Alignment.center,
+                        child: Column(
+                          children: [
+                            Icon(
+                              Icons.cloud_upload_outlined,
+                              size: 40,
+                              color: Colors.grey[400],
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'No files selected',
+                              style: TextStyle(color: Colors.grey[600]),
+                            ),
                           ],
                         ),
-
-                      if (_selectedFiles.isEmpty)
-                        const Padding(
-                          padding: EdgeInsets.only(top: 10),
-                          child: Text(
-                            'No files selected',
-                            style: TextStyle(color: Colors.grey),
-                          ),
-                        ),
-                    ],
-                  ),
+                      ),
+                  ],
                 ),
               ),
 
               const SizedBox(height: 24),
 
               // Submit button
-              ElevatedButton(
-                onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    // Handle form submission
-                    // For now, just show a success message
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Patient data submitted successfully!'),
-                      ),
-                    );
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 50),
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: _submitPatientData,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    'Save Patient Record',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
-                child: const Text('Submit'),
               ),
             ],
           ),
@@ -269,6 +365,108 @@ class _EntryPageState extends State<EntryPage> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Error picking files: $e')));
+    }
+  }
+
+  void _submitPatientData() async {
+    // Validate that at least one of CRN, UHID, or Patient Name is entered
+    if (_crnController.text.isEmpty &&
+        _uhidController.text.isEmpty &&
+        _patientNameController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'At least one of CRN, UHID, or Patient Name must be entered.',
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // Show loading indicator
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          content: Row(
+            children: [
+              const CircularProgressIndicator(),
+              const SizedBox(width: 20),
+              const Text("Saving patient data..."),
+            ],
+          ),
+        );
+      },
+    );
+
+    try {
+      // Store data to local database
+      final dbService = LocalDBService();
+
+      // Insert patient data
+      int patientId = await dbService.insertPatient(
+        crn: _crnController.text,
+        uhid: _uhidController.text,
+        patientName: _patientNameController.text,
+        dob: _dobController.text,
+      );
+
+      // Insert files if any
+      for (PlatformFile file in _selectedFiles) {
+        if (file.bytes != null) {
+          await dbService.insertFile(
+            patientId: patientId,
+            filename: file.name,
+            fileData: file.bytes!,
+            fileSize: file.size,
+          );
+        }
+      }
+
+      // Try to submit data to server
+      bool serverSuccess = await ApiService.submitPatientData(
+        crn: _crnController.text,
+        uhid: _uhidController.text,
+        patientName: _patientNameController.text,
+        dob: _dobController.text,
+        files: _selectedFiles,
+      );
+
+      // Close the loading dialog
+      Navigator.of(context).pop();
+
+      // Show success message
+      String message = serverSuccess
+          ? 'Patient data saved and synced with server successfully!'
+          : 'Patient data saved locally. Will sync with server when online.';
+      Color bgColor = serverSuccess ? Colors.green : Colors.orange;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message), backgroundColor: bgColor),
+      );
+
+      // Clear the form
+      _formKey.currentState!.reset();
+      _crnController.clear();
+      _uhidController.clear();
+      _patientNameController.clear();
+      _dobController.clear();
+      setState(() {
+        _selectedFiles = [];
+      });
+    } catch (e) {
+      // Close the loading dialog
+      Navigator.of(context).pop();
+
+      // Show error message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error saving patient data: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
