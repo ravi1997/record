@@ -5,6 +5,7 @@ import 'package:csv/csv.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import '../services/local_db_service.dart';
+import '../constants/app_constants.dart';
 
 class ExportService {
   // Export patient data to CSV
@@ -205,13 +206,14 @@ Files (${files.length})
 ${files.map((f) => '- ${f['filename']} (${(f['file_size'] / 1024 / 1024).toStringAsFixed(2)} MB)').join('\n')}
 ''');
 
-      // Copy files to export directory
+      // Save files from BLOB data to export directory
       for (var file in files) {
-        final originalFilePath = file['filepath'];
         final newFilePath = '$exportDir/${file['filename']}';
 
-        // Copy file
-        await File(originalFilePath).copy(newFilePath);
+        // Extract file data from BLOB and save to file
+        final fileData = file['file_data'] as List<int>;
+        final fileToSave = File(newFilePath);
+        await fileToSave.writeAsBytes(fileData);
       }
 
       return exportDir;
@@ -228,18 +230,14 @@ ${files.map((f) => '- ${f['filename']} (${(f['file_size'] / 1024 / 1024).toStrin
       final filePath =
           '${directory.path}/medical_records_backup_${DateTime.now().millisecondsSinceEpoch}.db';
 
-      // In a real app, you would copy the actual database file
-      // For this example, we'll just create a placeholder
-      final file = File(filePath);
-      await file.writeAsString('''
-Medical Records Backup
-=======================
+      // Get the database path and copy the actual database file
+      final dbService = LocalDBService();
+      final db = await dbService.database;
+      final dbPath = db.path;
 
-This is a placeholder for a database backup file.
-In a real application, this would contain the actual SQLite database.
-
-Generated on: ${DateTime.now()}
-''');
+      // Copy the database file to the backup location
+      final originalDbFile = File(dbPath);
+      await originalDbFile.copy(filePath);
 
       return filePath;
     } catch (e) {

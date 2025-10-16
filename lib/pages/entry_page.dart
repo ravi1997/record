@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
-import '../services/api_service.dart';
-import '../services/local_db_service.dart';
+import '../services/data_service.dart';
+import '../constants/app_constants.dart';
+import '../utils/ui_components.dart';
 
 class EntryPage extends StatefulWidget {
   const EntryPage({Key? key}) : super(key: key);
@@ -24,11 +25,8 @@ class _EntryPageState extends State<EntryPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Patient Entry'),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
-        elevation: 0,
+      appBar: UIComponents.buildAppBar(
+        title: 'Patient Entry',
       ),
       body: Container(
         padding: const EdgeInsets.all(16.0),
@@ -93,11 +91,11 @@ class _EntryPageState extends State<EntryPage> {
               ),
               const SizedBox(height: 16),
 
-              // Date of Birth
+              // Date of Birth (Optional)
               TextFormField(
                 controller: _dobController,
                 decoration: InputDecoration(
-                  labelText: 'Date of Birth',
+                  labelText: 'Date of Birth (Optional)',
                   prefixIcon: const Icon(Icons.cake),
                   suffixIcon: const Icon(Icons.calendar_today),
                   border: OutlineInputBorder(
@@ -122,7 +120,14 @@ class _EntryPageState extends State<EntryPage> {
                   }
                 },
                 validator: (value) {
-                  // Date of birth will be optional
+                  // Date of birth is optional, but if provided, validate format
+                  if (value != null && value.isNotEmpty) {
+                    try {
+                      DateTime.parse(value);
+                    } catch (e) {
+                      return 'Please enter a valid date in YYYY-MM-DD format';
+                    }
+                  }
                   return null;
                 },
               ),
@@ -312,7 +317,7 @@ class _EntryPageState extends State<EntryPage> {
       // Calculate how many more files we can select
       int remainingSlots = _maxFiles - _selectedFiles.length;
 
-      // Pick multiple files
+      // Pick multiple files with limit
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.any,
         allowMultiple: true,
@@ -322,14 +327,21 @@ class _EntryPageState extends State<EntryPage> {
         },
         // Limit the number of files to remaining slots
         allowCompression: false,
+        // Note: FilePicker doesn't directly support limiting count, we'll handle it after selection
       );
 
       if (result != null) {
+        // Limit to remaining slots
+        List<PlatformFile> filesToProcess = result.files;
+        if (filesToProcess.length > remainingSlots) {
+          filesToProcess = filesToProcess.sublist(0, remainingSlots);
+        }
+
         // Filter files by size (max 5MB each)
         List<PlatformFile> validFiles = [];
         List<PlatformFile> oversizedFiles = [];
 
-        for (PlatformFile file in result.files) {
+        for (PlatformFile file in filesToProcess) {
           double fileSizeMB = file.size / 1024 / 1024; // Convert bytes to MB
 
           if (fileSizeMB > _maxFileSizeMB) {
@@ -358,6 +370,14 @@ class _EntryPageState extends State<EntryPage> {
           msg += oversizedFiles.map((f) => f.name).join(', ');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(msg), duration: const Duration(seconds: 3)),
+          );
+        }
+
+        // Show message if we hit the file limit
+        if (_selectedFiles.length >= _maxFiles) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+                content: Text('Maximum number of files reached (5)')),
           );
         }
       }
@@ -402,35 +422,15 @@ class _EntryPageState extends State<EntryPage> {
     );
 
     try {
-      // Store data to local database
-      final dbService = LocalDBService();
+      // Use data service to store data
+      final dataService = DataService();
 
-      // Insert patient data
-      int patientId = await dbService.insertPatient(
+      // Submit patient data
+      bool success = await dataService.submitPatientData(
         crn: _crnController.text,
         uhid: _uhidController.text,
         patientName: _patientNameController.text,
-        dob: _dobController.text,
-      );
-
-      // Insert files if any
-      for (PlatformFile file in _selectedFiles) {
-        if (file.bytes != null) {
-          await dbService.insertFile(
-            patientId: patientId,
-            filename: file.name,
-            fileData: file.bytes!,
-            fileSize: file.size,
-          );
-        }
-      }
-
-      // Try to submit data to server
-      bool serverSuccess = await ApiService.submitPatientData(
-        crn: _crnController.text,
-        uhid: _uhidController.text,
-        patientName: _patientNameController.text,
-        dob: _dobController.text,
+        dob: _dobController.text.isNotEmpty ? _dobController.text : null,
         files: _selectedFiles,
       );
 
@@ -438,24 +438,31 @@ class _EntryPageState extends State<EntryPage> {
       Navigator.of(context).pop();
 
       // Show success message
-      String message = serverSuccess
-          ? 'Patient data saved and synced with server successfully!'
-          : 'Patient data saved locally. Will sync with server when online.';
-      Color bgColor = serverSuccess ? Colors.green : Colors.orange;
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Patient data saved successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message), backgroundColor: bgColor),
-      );
-
-      // Clear the form
-      _formKey.currentState!.reset();
-      _crnController.clear();
-      _uhidController.clear();
-      _patientNameController.clear();
-      _dobController.clear();
-      setState(() {
-        _selectedFiles = [];
-      });
+        // Clear the form
+        _formKey.currentState!.reset();
+        _crnController.clear();
+        _uhidController.clear();
+        _patientNameController.clear();
+        _dobController.clear();
+        setState(() {
+          _selectedFiles = [];
+        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Error saving patient data. Please try again.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     } catch (e) {
       // Close the loading dialog
       Navigator.of(context).pop();

@@ -1,6 +1,7 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'dart:typed_data';
+import '../constants/app_constants.dart';
 
 class LocalDBService {
   static Database? _database;
@@ -12,14 +13,20 @@ class LocalDBService {
     return _database!;
   }
 
+  // Configure database
+  Future<void> _onConfigure(Database db) async {
+    await db.execute('PRAGMA foreign_keys = ON;');
+  }
+
   // Initialize the database
   Future<Database> _initDatabase() async {
-    String path = join(await getDatabasesPath(), 'medical_records.db');
+    String path = join(await getDatabasesPath(), AppConstants.databaseName);
     return await openDatabase(
       path,
       version: 1,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
+      onConfigure: _onConfigure,
     );
   }
 
@@ -32,7 +39,7 @@ class LocalDBService {
         crn TEXT UNIQUE NOT NULL,
         uhid TEXT NOT NULL,
         patient_name TEXT NOT NULL,
-        dob TEXT NOT NULL,
+        dob TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         synced INTEGER DEFAULT 0
       )
@@ -48,38 +55,46 @@ class LocalDBService {
         file_size INTEGER,
         upload_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         synced INTEGER DEFAULT 0,
-        FOREIGN KEY (patient_id) REFERENCES patients (id)
+        FOREIGN KEY (patient_id) REFERENCES patients (id) ON DELETE CASCADE
       )
     ''');
   }
 
-  // Upgrade database
+  // Upgrade database - forward-only migrations
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    // Handle database upgrades here
-    // For now, we'll just recreate the tables
-    await db.execute('DROP TABLE IF EXISTS files');
-    await db.execute('DROP TABLE IF EXISTS patients');
-    await _onCreate(db, newVersion);
+    // Add migrations here as needed for future versions
+    if (oldVersion < 2) {
+      // Example: Add new column in future version
+      // await db.execute('ALTER TABLE patients ADD COLUMN new_column TEXT;');
+    }
   }
 
-  // Insert a new patient
+  // Insert a new patient with transaction
   Future<int> insertPatient({
     required String crn,
     required String uhid,
     required String patientName,
-    required String dob,
+    required String? dob,
   }) async {
     final db = await database;
-    return await db.insert('patients', {
-      'crn': crn,
-      'uhid': uhid,
-      'patient_name': patientName,
-      'dob': dob,
-      'synced': 0, // Mark as not synced initially
-    });
+    try {
+      return await db.insert(
+        'patients',
+        {
+          'crn': crn,
+          'uhid': uhid,
+          'patient_name': patientName,
+          'dob': dob ?? '',
+          'synced': 0, // Mark as not synced initially
+        },
+        conflictAlgorithm: ConflictAlgorithm.abort, // Throw error on conflict
+      );
+    } catch (e) {
+      rethrow; // Rethrow to let caller handle duplicate CRN errors
+    }
   }
 
-  // Insert a file
+  // Insert a file with transaction
   Future<int> insertFile({
     required int patientId,
     required String filename,
@@ -87,19 +102,37 @@ class LocalDBService {
     required int fileSize,
   }) async {
     final db = await database;
-    return await db.insert('files', {
-      'patient_id': patientId,
-      'filename': filename,
-      'file_data': fileData,
-      'file_size': fileSize,
-      'synced': 0, // Mark as not synced initially
-    });
+    return await db.insert(
+      'files',
+      {
+        'patient_id': patientId,
+        'filename': filename,
+        'file_data': fileData,
+        'file_size': fileSize,
+        'synced': 0, // Mark as not synced initially
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace, // Replace if exists
+    );
   }
 
   // Get all patients
   Future<List<Map<String, dynamic>>> getAllPatients() async {
     final db = await database;
     return await db.query('patients');
+  }
+
+  // Get patients with pagination
+  Future<List<Map<String, dynamic>>> getPatientsPaginated({
+    required int offset,
+    required int limit,
+  }) async {
+    final db = await database;
+    return await db.query(
+      'patients',
+      orderBy: 'created_at DESC',
+      limit: limit,
+      offset: offset,
+    );
   }
 
   // Get patients by search criteria
@@ -257,5 +290,7 @@ class LocalDBService {
   Future<void> close() async {
     final db = await database;
     await db.close();
+    _database =
+        null; // Reset database so a fresh connection is opened next time
   }
 }

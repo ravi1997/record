@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
+import '../constants/app_constants.dart';
+import '../utils/ui_components.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({Key? key}) : super(key: key);
@@ -15,11 +17,8 @@ class _DashboardPageState extends State<DashboardPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Advanced Dashboard'),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
-        elevation: 0,
+      appBar: UIComponents.buildAppBar(
+        title: 'Advanced Dashboard',
         actions: [
           IconButton(
             icon: Icon(_isGridView ? Icons.list : Icons.grid_view),
@@ -61,7 +60,7 @@ class _DashboardPageState extends State<DashboardPage> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.grey[100],
+                  color: Theme.of(context).colorScheme.surfaceVariant,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
@@ -76,29 +75,35 @@ class _DashboardPageState extends State<DashboardPage> {
               const SizedBox(height: 24),
 
               // Key Metrics
-              const Text(
+              Text(
                 'Key Metrics',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppConstants.defaultPadding),
               _buildMetricsGrid(),
               const SizedBox(height: 24),
 
               // Charts Section
-              const Text(
+              Text(
                 'Analytics Overview',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppConstants.defaultPadding),
               _buildChartSection(),
               const SizedBox(height: 24),
 
               // Recent Activity
-              const Text(
+              Text(
                 'Recent Activity',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppConstants.defaultPadding),
               _buildActivityList(),
             ],
           ),
@@ -108,26 +113,15 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Widget _buildTimeRangeButton(String label, int index) {
-    bool isSelected = _selectedTimeRange == index;
-    return Expanded(
-      child: TextButton(
-        onPressed: () {
-          setState(() {
-            _selectedTimeRange = index;
-          });
-        },
-        style: TextButton.styleFrom(
-          backgroundColor: isSelected ? Colors.blue : Colors.transparent,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: isSelected ? Colors.white : Colors.grey[700],
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-          ),
-        ),
-      ),
+    return UIComponents.buildTimeRangeButton(
+      label: label,
+      index: index,
+      selectedTimeRange: _selectedTimeRange,
+      onSelect: (selectedIndex) {
+        setState(() {
+          _selectedTimeRange = selectedIndex;
+        });
+      },
     );
   }
 
@@ -237,7 +231,9 @@ class _DashboardPageState extends State<DashboardPage> {
           children: [
             const Text(
               'Monthly Record Trends',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                  fontSize: AppConstants.regularTextSize,
+                  fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             SizedBox(
@@ -333,36 +329,20 @@ class _DashboardPageState extends State<DashboardPage> {
 
   void _exportData() {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: const [
-            Icon(Icons.file_download, color: Colors.white),
-            SizedBox(width: 8),
-            Text('Exporting data...'),
-          ],
-        ),
-        backgroundColor: Colors.blue[700],
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      UIComponents.buildSnackBar(
+        message: 'Exporting data...',
+        backgroundColor: Colors.blue[700]!,
+        icon: Icons.file_download,
       ),
     );
 
     // Simulate export process
     Future.delayed(const Duration(seconds: 2), () {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: const [
-              Icon(Icons.check_circle, color: Colors.white),
-              SizedBox(width: 8),
-              Text('Data exported successfully!'),
-            ],
-          ),
-          backgroundColor: Colors.green[700],
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
+        UIComponents.buildSnackBar(
+          message: 'Data exported successfully!',
+          backgroundColor: Colors.green[700]!,
+          icon: Icons.check_circle,
         ),
       );
     });
@@ -370,36 +350,20 @@ class _DashboardPageState extends State<DashboardPage> {
 
   void _refreshData() {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: const [
-            Icon(Icons.sync, color: Colors.white),
-            SizedBox(width: 8),
-            Text('Refreshing data...'),
-          ],
-        ),
-        backgroundColor: Colors.blue[700],
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      UIComponents.buildSnackBar(
+        message: 'Refreshing data...',
+        backgroundColor: Colors.blue[700]!,
+        icon: Icons.sync,
       ),
     );
 
     // Simulate refresh process
     Future.delayed(const Duration(seconds: 1), () {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: const [
-              Icon(Icons.check_circle, color: Colors.white),
-              SizedBox(width: 8),
-              Text('Data refreshed successfully!'),
-            ],
-          ),
-          backgroundColor: Colors.green[700],
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
+        UIComponents.buildSnackBar(
+          message: 'Data refreshed successfully!',
+          backgroundColor: Colors.green[700]!,
+          icon: Icons.check_circle,
         ),
       );
     });

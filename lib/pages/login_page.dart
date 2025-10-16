@@ -1,5 +1,8 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
-import '../services/api_service.dart';
+import '../constants/app_constants.dart';
+import '../constants/theme_constants.dart';
+import '../utils/ui_components.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -24,6 +27,7 @@ class _LoginPageState extends State<LoginPage> {
   bool _isLoading = false;
   String _otpButtonText = 'Send OTP';
   int _countdownSeconds = 0;
+  late StreamSubscription<int>? _otpCountdownSubscription;
 
   @override
   Widget build(BuildContext context) {
@@ -35,34 +39,35 @@ class _LoginPageState extends State<LoginPage> {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Colors.blue, Colors.blueAccent],
+            colors: [Color(0xFF006A6A), Color(0xFF004D4D)],
           ),
         ),
         child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.all(24.0),
+            padding: const EdgeInsets.all(AppConstants.defaultPadding * 1.5),
             child: Column(
               children: [
                 const Spacer(flex: 1),
                 // App logo/title
-                Icon(Icons.medical_services, size: 80, color: Colors.white),
-                const SizedBox(height: 16),
-                const Text(
-                  'Medical Record System',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
+                Icon(Icons.medical_services,
+                    size: AppConstants.largeIconSize, color: Colors.white),
+                const SizedBox(height: AppConstants.defaultPadding),
+                Text(
+                  AppConstants.appName,
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
                 ),
-                const SizedBox(height: 48),
+                const SizedBox(height: AppConstants.spacingExtraLarge + 16),
                 // Login form
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.all(24),
+                  padding:
+                      const EdgeInsets.all(AppConstants.defaultPadding * 1.5),
                   decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
+                    color: ThemeConstants.lightColorScheme.surface,
+                    borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withOpacity(0.1),
@@ -80,7 +85,8 @@ class _LoginPageState extends State<LoginPage> {
                           height: 40,
                           width: double.infinity,
                           decoration: BoxDecoration(
-                            color: Colors.grey[200],
+                            color:
+                                ThemeConstants.lightColorScheme.surfaceVariant,
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Row(
@@ -96,8 +102,14 @@ class _LoginPageState extends State<LoginPage> {
                                   },
                                   style: TextButton.styleFrom(
                                     backgroundColor: _isEmployeeLogin
-                                        ? Colors.blue
+                                        ? ThemeConstants
+                                            .lightColorScheme.primary
                                         : Colors.transparent,
+                                    foregroundColor: _isEmployeeLogin
+                                        ? ThemeConstants
+                                            .lightColorScheme.onPrimary
+                                        : ThemeConstants
+                                            .lightColorScheme.onSurfaceVariant,
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(20),
                                     ),
@@ -106,8 +118,10 @@ class _LoginPageState extends State<LoginPage> {
                                     'Employee',
                                     style: TextStyle(
                                       color: _isEmployeeLogin
-                                          ? Colors.white
-                                          : Colors.grey[700],
+                                          ? ThemeConstants
+                                              .lightColorScheme.onPrimary
+                                          : ThemeConstants.lightColorScheme
+                                              .onSurfaceVariant,
                                     ),
                                   ),
                                 ),
@@ -123,8 +137,14 @@ class _LoginPageState extends State<LoginPage> {
                                   },
                                   style: TextButton.styleFrom(
                                     backgroundColor: !_isEmployeeLogin
-                                        ? Colors.blue
+                                        ? ThemeConstants
+                                            .lightColorScheme.primary
                                         : Colors.transparent,
+                                    foregroundColor: !_isEmployeeLogin
+                                        ? ThemeConstants
+                                            .lightColorScheme.onPrimary
+                                        : ThemeConstants
+                                            .lightColorScheme.onSurfaceVariant,
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(20),
                                     ),
@@ -133,8 +153,10 @@ class _LoginPageState extends State<LoginPage> {
                                     'Mobile OTP',
                                     style: TextStyle(
                                       color: !_isEmployeeLogin
-                                          ? Colors.white
-                                          : Colors.grey[700],
+                                          ? ThemeConstants
+                                              .lightColorScheme.onPrimary
+                                          : ThemeConstants.lightColorScheme
+                                              .onSurfaceVariant,
                                     ),
                                   ),
                                 ),
@@ -142,104 +164,79 @@ class _LoginPageState extends State<LoginPage> {
                             ],
                           ),
                         ),
-                        const SizedBox(height: 24),
+                        const SizedBox(
+                            height: AppConstants.defaultPadding * 1.5),
 
                         // Mobile number field (for OTP login)
                         if (!_isEmployeeLogin)
                           Column(
                             children: [
-                              TextFormField(
+                              UIComponents.buildInputField(
                                 controller: _mobileController,
-                                decoration: InputDecoration(
-                                  labelText: 'Mobile Number',
-                                  prefixIcon: const Icon(Icons.phone),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  filled: true,
-                                  fillColor: Colors.grey[50],
-                                ),
+                                labelText: 'Mobile Number',
+                                prefixIcon: Icons.phone,
                                 keyboardType: TextInputType.phone,
                                 enabled: _countdownSeconds == 0,
                                 validator: (value) {
                                   if (value == null || value.isEmpty) {
-                                    return 'Please enter your mobile number';
+                                    return AppConstants.requiredFieldMessage;
                                   }
                                   if (!RegExp(r'^[0-9]{10}$').hasMatch(value)) {
-                                    return 'Please enter a valid 10-digit mobile number';
+                                    return AppConstants.invalidPhoneMessage;
                                   }
                                   return null;
                                 },
                               ),
-                              const SizedBox(height: 16),
-                              SizedBox(
-                                width: double.infinity,
-                                height: 50,
-                                child: ElevatedButton(
-                                  onPressed:
-                                      _countdownSeconds == 0 ? _sendOtp : null,
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: _countdownSeconds == 0
-                                        ? Colors.blue
-                                        : Colors.grey,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                  ),
-                                  child: _countdownSeconds > 0
-                                      ? Text('Resend OTP ($_countdownSeconds)')
-                                      : Text(_otpButtonText),
-                                ),
+                              const SizedBox(
+                                  height: AppConstants.defaultPadding),
+                              UIComponents.buildButton(
+                                text: _countdownSeconds > 0
+                                    ? 'Resend OTP ($_countdownSeconds)'
+                                    : _otpButtonText,
+                                onPressed:
+                                    _countdownSeconds == 0 ? _sendOtp : null,
+                                backgroundColor: _countdownSeconds == 0
+                                    ? null // Use theme default
+                                    : null,
                               ),
-                              if (_showOTPField) const SizedBox(height: 16),
+                              if (_showOTPField)
+                                const SizedBox(
+                                    height: AppConstants.defaultPadding),
                             ],
                           ),
 
                         // Username/Employee ID field (for employee login)
                         if (_isEmployeeLogin)
-                          TextFormField(
+                          UIComponents.buildInputField(
                             controller: _usernameController,
-                            decoration: InputDecoration(
-                              labelText: 'Employee ID',
-                              prefixIcon: const Icon(Icons.person),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              filled: true,
-                              fillColor: Colors.grey[50],
-                            ),
+                            labelText: 'Employee ID',
+                            prefixIcon: Icons.person,
                             enabled: !_isLoading,
                             validator: (value) {
                               if (value == null || value.isEmpty) {
-                                return 'Please enter your employee ID';
+                                return AppConstants.requiredFieldMessage;
                               }
                               return null;
                             },
                           ),
 
-                        if (_isEmployeeLogin) const SizedBox(height: 16),
+                        if (_isEmployeeLogin)
+                          const SizedBox(height: AppConstants.defaultPadding),
 
                         // Password field (for both login types)
                         if (_isEmployeeLogin)
-                          TextFormField(
+                          UIComponents.buildInputField(
                             controller: _passwordController,
+                            labelText: 'Password',
+                            prefixIcon: Icons.lock,
                             obscureText: true,
                             enabled: !_isLoading,
-                            decoration: InputDecoration(
-                              labelText: 'Password',
-                              prefixIcon: const Icon(Icons.lock),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              filled: true,
-                              fillColor: Colors.grey[50],
-                            ),
                             validator: (value) {
                               if (value == null || value.isEmpty) {
-                                return 'Please enter your password';
+                                return AppConstants.requiredFieldMessage;
                               }
                               if (value.length < 6) {
-                                return 'Password must be at least 6 characters';
+                                return AppConstants.invalidPasswordMessage;
                               }
                               return null;
                             },
@@ -249,64 +246,34 @@ class _LoginPageState extends State<LoginPage> {
                         if (!_isEmployeeLogin && _showOTPField)
                           Column(
                             children: [
-                              TextFormField(
+                              UIComponents.buildInputField(
                                 controller: _otpController,
-                                decoration: InputDecoration(
-                                  labelText: 'OTP',
-                                  prefixIcon: const Icon(Icons.key),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  filled: true,
-                                  fillColor: Colors.grey[50],
-                                ),
+                                labelText: 'OTP',
+                                prefixIcon: Icons.key,
                                 keyboardType: TextInputType.number,
                                 enabled: !_isLoading,
                                 validator: (value) {
                                   if (value == null || value.isEmpty) {
-                                    return 'Please enter the OTP';
+                                    return AppConstants.requiredFieldMessage;
                                   }
-                                  if (value.length != 6) {
-                                    return 'OTP must be 6 digits';
+                                  if (value.length != AppConstants.otpLength) {
+                                    return AppConstants.invalidOtpMessage;
                                   }
                                   return null;
                                 },
                               ),
-                              const SizedBox(height: 24),
+                              const SizedBox(
+                                  height: AppConstants.spacingMedium),
                             ],
                           ),
 
-                        const SizedBox(height: 8),
+                        const SizedBox(height: AppConstants.spacingSmall),
 
                         // Login button
-                        SizedBox(
-                          width: double.infinity,
-                          height: 50,
-                          child: _isLoading
-                              ? const Center(
-                                  child: CircularProgressIndicator(
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                      Colors.white,
-                                    ),
-                                  ),
-                                )
-                              : ElevatedButton(
-                                  onPressed: _handleLogin,
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.blue,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                  ),
-                                  child: const Text(
-                                    'Login',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
+                        UIComponents.buildButton(
+                          text: 'Login',
+                          onPressed: _handleLogin,
+                          isLoading: _isLoading,
                         ),
                       ],
                     ),
@@ -327,7 +294,8 @@ class _LoginPageState extends State<LoginPage> {
         _isLoading = true;
       });
 
-      bool success = await ApiService.sendOtp(_mobileController.text);
+      // Simulate sending OTP (offline)
+      bool success = true; // Always succeed in offline mode
 
       setState(() {
         _isLoading = false;
@@ -345,7 +313,7 @@ class _LoginPageState extends State<LoginPage> {
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('OTP sent successfully!'),
+            content: Text('OTP sent successfully! (Offline mode)'),
             backgroundColor: Colors.green,
           ),
         );
@@ -364,7 +332,7 @@ class _LoginPageState extends State<LoginPage> {
     const oneSec = Duration(seconds: 1);
     var timer = Stream.periodic(oneSec, (x) => x).take(_countdownSeconds);
 
-    timer.listen(
+    _otpCountdownSubscription = timer.listen(
       (int i) {
         setState(() {
           _countdownSeconds = _countdownSeconds - 1;
@@ -373,6 +341,7 @@ class _LoginPageState extends State<LoginPage> {
       onDone: () {
         setState(() {
           _countdownSeconds = 0;
+          _otpCountdownSubscription = null;
         });
       },
     );
@@ -387,20 +356,18 @@ class _LoginPageState extends State<LoginPage> {
       bool loginSuccess = false;
 
       if (_isEmployeeLogin) {
-        // Employee login
-        var result = await ApiService.loginWithEmployee(
-          _usernameController.text,
-          _passwordController.text,
-        );
-        loginSuccess = result != null;
+        // Employee login - bypass API call in offline mode
+        loginSuccess = true; // Always succeed in offline mode
       } else {
-        // Mobile OTP login
+        // Mobile OTP login - bypass API call in offline mode
         if (_showOTPField) {
-          var result = await ApiService.verifyOtp(
-            _mobileController.text,
-            _otpController.text,
-          );
-          loginSuccess = result != null;
+          // Verify OTP locally (just check if it's a 6-digit number)
+          if (_otpController.text.length == 6 &&
+              RegExp(r'^[0-9]{6}$').hasMatch(_otpController.text)) {
+            loginSuccess = true;
+          } else {
+            loginSuccess = false;
+          }
         }
       }
 
@@ -410,7 +377,7 @@ class _LoginPageState extends State<LoginPage> {
 
       if (loginSuccess) {
         // Navigate to home page
-        Navigator.pushReplacementNamed(context, '/home');
+        Navigator.pushReplacementNamed(context, AppConstants.homeRoute);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -428,6 +395,7 @@ class _LoginPageState extends State<LoginPage> {
     _passwordController.dispose();
     _mobileController.dispose();
     _otpController.dispose();
+    _otpCountdownSubscription?.cancel();
     super.dispose();
   }
 }

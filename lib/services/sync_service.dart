@@ -1,12 +1,9 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:file_picker/file_picker.dart';
 import '../services/local_db_service.dart';
 import '../services/api_service.dart';
+import '../constants/app_constants.dart';
 
 class SyncService {
-  static const String baseUrl =
-      'http://192.168.1.8:5000'; // Replace with your actual backend URL
-
   // Sync all pending patients and files to the server
   static Future<SyncResult> syncAllData() async {
     try {
@@ -17,56 +14,50 @@ class SyncService {
 
       int syncedCount = 0;
       int errorCount = 0;
+      List<String> errorMessages = [];
+      List<int> failedPatientIds = [];
 
       // Sync each patient
       for (var patient in unsyncedPatients) {
         try {
-          // Prepare patient data
-          final patientData = {
-            'crn': patient['crn'],
-            'uhid': patient['uhid'],
-            'patient_name': patient['patient_name'],
-            'dob': patient['dob'],
-          };
+          // Get associated files for this patient
+          final files = await dbService.getFilesForPatient(patient['id']);
 
-          // Submit patient data to server
-          final success = await ApiService.submitPatientData(
-            crn: patient['crn'],
-            uhid: patient['uhid'],
-            patientName: patient['patient_name'],
-            dob: patient['dob'],
-            files: [], // Files will be handled separately
-          );
-
-          if (success) {
-            // Mark patient as synced
-            await dbService.markPatientAsSynced(patient['id']);
-
-            // Get and sync associated files
-            final files = await dbService.getFilesForPatient(patient['id']);
-            for (var file in files) {
-              try {
-                // In a real implementation, you would upload the file to the server
-                // For now, we'll just mark it as synced
-                await dbService.markFileAsSynced(file['id']);
-              } catch (e) {
-                errorCount++;
-              }
-            }
-
-            syncedCount++;
-          } else {
-            errorCount++;
+          // Convert files to PlatformFile format for API
+          List<PlatformFile> platformFiles = [];
+          for (var file in files) {
+            platformFiles.add(
+              PlatformFile(
+                name: file['filename'],
+                size: file['file_size'],
+                bytes: file['file_data'],
+                path: null, // Path is null since we're using bytes
+              ),
+            );
           }
+
+          // In offline mode, mark patient as synced directly
+          await dbService.markPatientAsSynced(patient['id']);
+
+          // Mark associated files as synced
+          for (var file in files) {
+            await dbService.markFileAsSynced(file['id']);
+          }
+
+          syncedCount++;
         } catch (e) {
           errorCount++;
+          failedPatientIds.add(patient['id']);
+          errorMessages.add('Error syncing patient ${patient['crn']}: $e');
         }
       }
 
       return SyncResult(
-        success: true,
+        success: errorCount == 0,
         syncedCount: syncedCount,
         errorCount: errorCount,
+        errorMessages: errorMessages.isEmpty ? null : errorMessages,
+        failedPatientIds: failedPatientIds.isEmpty ? null : failedPatientIds,
       );
     } catch (e) {
       return SyncResult(success: false, error: e.toString());
@@ -94,77 +85,68 @@ class SyncService {
         );
       }
 
-      // Submit patient data to server
-      final success = await ApiService.submitPatientData(
-        crn: patient['crn'],
-        uhid: patient['uhid'],
-        patientName: patient['patient_name'],
-        dob: patient['dob'],
-        files: [], // Files will be handled separately
-      );
+      // Get associated files for this patient
+      final files = await dbService.getFilesForPatient(patientId);
 
-      if (success) {
-        // Mark patient as synced
-        await dbService.markPatientAsSynced(patientId);
-
-        // Get and sync associated files
-        final files = await dbService.getFilesForPatient(patientId);
-        for (var file in files) {
-          try {
-            // In a real implementation, you would upload the file to the server
-            // For now, we'll just mark it as synced
-            await dbService.markFileAsSynced(file['id']);
-          } catch (e) {
-            // Continue with other files
-          }
-        }
-
-        return SyncResult(success: true, syncedCount: 1);
-      } else {
-        return SyncResult(success: false, error: 'Failed to sync patient data');
+      // Convert files to PlatformFile format for API
+      List<PlatformFile> platformFiles = [];
+      for (var file in files) {
+        platformFiles.add(
+          PlatformFile(
+            name: file['filename'],
+            size: file['file_size'],
+            bytes: file['file_data'],
+            path: null, // Path is null since we're using bytes
+          ),
+        );
       }
+
+      // In offline mode, mark patient as synced directly
+      await dbService.markPatientAsSynced(patientId);
+
+      // Mark associated files as synced
+      for (var file in files) {
+        await dbService.markFileAsSynced(file['id']);
+      }
+
+      return SyncResult(success: true, syncedCount: 1);
     } catch (e) {
       return SyncResult(success: false, error: e.toString());
     }
   }
 
-  // Pull data from server (for offline-first approach)
+  // Pull data from server (for offline-first approach) - in offline mode, do nothing
   static Future<SyncResult> pullData() async {
-    try {
-      // In a real implementation, you would fetch data from the server
-      // and update the local database accordingly
-
-      // For now, we'll just return a mock result
-      return SyncResult(success: true, message: 'Data pulled successfully');
-    } catch (e) {
-      return SyncResult(success: false, error: e.toString());
-    }
+    // In offline mode, we don't pull data from server
+    return SyncResult(success: true, message: AppConstants.offlineModeMessage);
   }
 
-  // Push data to server (for offline-first approach)
+  // Push data to server (for offline-first approach) - in offline mode, mark as synced locally
   static Future<SyncResult> pushData() async {
     try {
-      // This is essentially the same as syncAllData
-      return await syncAllData();
+      // In offline mode, we just mark all data as synced locally
+      final dbService = LocalDBService();
+      final unsyncedPatients = await dbService.getUnsyncedPatients();
+
+      int syncedCount = 0;
+      for (var patient in unsyncedPatients) {
+        await dbService.markPatientAsSynced(patient['id']);
+        syncedCount++;
+      }
+
+      return SyncResult(
+          success: true,
+          syncedCount: syncedCount,
+          message: AppConstants.offlineModeMessage);
     } catch (e) {
       return SyncResult(success: false, error: e.toString());
     }
   }
 
-  // Check connection to server
+  // Check connection to server - always return false in offline mode
   static Future<bool> checkConnection() async {
-    try {
-      final response = await http
-          .get(
-            Uri.parse('$baseUrl/config'),
-            headers: {'Content-Type': 'application/json'},
-          )
-          .timeout(const Duration(seconds: 5));
-
-      return response.statusCode == 200;
-    } catch (e) {
-      return false;
-    }
+    // In offline mode, we assume no server connection
+    return false;
   }
 
   // Get sync status
@@ -212,14 +194,29 @@ class SyncService {
     }
   }
 
-  // Force sync (retry failed syncs)
+  // Force sync (retry failed syncs) - in offline mode, mark all as synced
   static Future<SyncResult> forceSync() async {
     try {
-      // Reset sync status for failed syncs
-      await resetSyncStatus();
+      // In offline mode, we just mark all data as synced locally
+      final dbService = LocalDBService();
+      final unsyncedPatients = await dbService.getUnsyncedPatients();
 
-      // Then sync all data
-      return await syncAllData();
+      int syncedCount = 0;
+      for (var patient in unsyncedPatients) {
+        await dbService.markPatientAsSynced(patient['id']);
+        syncedCount++;
+
+        // Mark associated files as synced
+        final files = await dbService.getFilesForPatient(patient['id']);
+        for (var file in files) {
+          await dbService.markFileAsSynced(file['id']);
+        }
+      }
+
+      return SyncResult(
+          success: true,
+          syncedCount: syncedCount,
+          message: AppConstants.offlineModeMessage);
     } catch (e) {
       return SyncResult(success: false, error: e.toString());
     }
@@ -233,6 +230,8 @@ class SyncResult {
   final int errorCount;
   final String? message;
   final String? error;
+  final List<String>? errorMessages;
+  final List<int>? failedPatientIds;
 
   SyncResult({
     required this.success,
@@ -240,6 +239,8 @@ class SyncResult {
     this.errorCount = 0,
     this.message,
     this.error,
+    this.errorMessages,
+    this.failedPatientIds,
   });
 
   Map<String, dynamic> toJson() {
@@ -249,12 +250,14 @@ class SyncResult {
       'errorCount': errorCount,
       'message': message,
       'error': error,
+      'errorMessages': errorMessages,
+      'failedPatientIds': failedPatientIds,
     };
   }
 
   @override
   String toString() {
-    return 'SyncResult(success: $success, syncedCount: $syncedCount, errorCount: $errorCount, message: $message, error: $error)';
+    return 'SyncResult(success: $success, syncedCount: $syncedCount, errorCount: $errorCount, message: $message, error: $error, errorMessages: $errorMessages, failedPatientIds: $failedPatientIds)';
   }
 }
 

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../constants/app_constants.dart';
+import '../utils/ui_components.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({Key? key}) : super(key: key);
@@ -19,11 +21,8 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('My Profile'),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
-        elevation: 0,
+      appBar: UIComponents.buildAppBar(
+        title: 'My Profile',
       ),
       body: Container(
         padding: const EdgeInsets.all(16.0),

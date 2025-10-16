@@ -1,45 +1,62 @@
 import 'dart:typed_data';
-import 'api_service.dart';
+import 'package:sqflite/sqflite.dart';
 import 'local_db_service.dart';
 import 'package:file_picker/file_picker.dart';
+import '../constants/app_constants.dart';
 
 class DataService {
   final LocalDBService _localDB = LocalDBService();
 
-  // Submit patient data - first save locally, then sync with server
+  // Submit patient data - first save locally in a transaction, then sync with server
   Future<bool> submitPatientData({
     required String crn,
     required String uhid,
     required String patientName,
-    required String dob,
+    required String? dob,
     required List<PlatformFile> files,
   }) async {
     try {
-      // Insert patient into local database
-      int patientId = await _localDB.insertPatient(
-        crn: crn,
-        uhid: uhid,
-        patientName: patientName,
-        dob: dob,
-      );
+      final db = await _localDB.database;
+      int patientId = -1;
 
-      // Insert files into local database
-      for (PlatformFile file in files) {
-        if (file.bytes != null) {
-          await _localDB.insertFile(
-            patientId: patientId,
-            filename: file.name,
-            fileData: file.bytes!,
-            fileSize: file.size,
-          );
+      // Wrap patient and file inserts in a single transaction
+      await db.transaction((txn) async {
+        // Insert patient into local database
+        patientId = await txn.insert(
+          'patients',
+          {
+            'crn': crn,
+            'uhid': uhid,
+            'patient_name': patientName,
+            'dob': dob ?? '',
+            'synced': 0, // Mark as not synced initially
+          },
+          conflictAlgorithm:
+              ConflictAlgorithm.abort, // Throw error on duplicate CRN
+        );
+
+        // Insert files into local database
+        for (PlatformFile file in files) {
+          if (file.bytes != null) {
+            await txn.insert(
+              'files',
+              {
+                'patient_id': patientId,
+                'filename': file.name,
+                'file_data': file.bytes!,
+                'file_size': file.size,
+                'synced': 0, // Mark as not synced initially
+              },
+            );
+          }
         }
-      }
+      });
 
       // Attempt to sync with server immediately
       bool synced = await _syncWithServer();
-
-      return true;
-    } catch (e) {
+      return synced; // Propagate sync status
+    } on Exception catch (e) {
+      // Handle database-specific errors like duplicate CRN
       print('Error submitting patient data: $e');
       return false;
     }
@@ -76,36 +93,8 @@ class DataService {
         });
       }
 
-      // Try to get results from server as well
-      try {
-        List<Map<String, dynamic>>? serverResults =
-            await ApiService.searchPatients(
-              searchType: searchType,
-              searchTerm: searchTerm,
-            );
-
-        if (serverResults != null) {
-          // Add server results that aren't already in local results
-          for (var serverPatient in serverResults) {
-            bool exists = false;
-            for (var localPatient in results) {
-              if (localPatient['crn'] == serverPatient['crn']) {
-                exists = true;
-                break;
-              }
-            }
-
-            if (!exists) {
-              // Mark as server result
-              serverPatient['source'] = 'server';
-              results.add(serverPatient);
-            }
-          }
-        }
-      } catch (e) {
-        print('Error searching on server: $e');
-        // Still return local results if server fails
-      }
+      // In offline mode, we only return local results
+      // No server search is performed
 
       return results;
     } catch (e) {
@@ -148,65 +137,25 @@ class DataService {
     return await _syncWithServer();
   }
 
-  // Internal method to sync with server
+  // Internal method to sync with server - in offline mode, just mark as synced
   Future<bool> _syncWithServer() async {
     try {
-      bool success = true;
-
-      // Get all unsynced patients
-      List<Map<String, dynamic>> unsyncedPatients = await _localDB
-          .getUnsyncedPatients();
-
-      // Sync each patient and its files
+      // In offline mode, we just mark all local records as synced
+      // since there's no server to sync with
+      final unsyncedPatients = await _localDB.getUnsyncedPatients();
       for (var patient in unsyncedPatients) {
-        // Get unsynced files for this patient
-        List<Map<String, dynamic>> unsyncedFiles = await _localDB
-            .getUnsyncedFiles();
+        await _localDB.markPatientAsSynced(patient['id']);
 
-        // Filter files that belong to this patient
-        List<Map<String, dynamic>> patientFiles = [];
-        for (var file in unsyncedFiles) {
-          if (file['patient_id'] == patient['id']) {
-            patientFiles.add(file);
-          }
-        }
-
-        // Convert PlatformFile format for API
-        List<PlatformFile> platformFiles = [];
-        for (var file in patientFiles) {
-          platformFiles.add(
-            PlatformFile(
-              name: file['filename'],
-              size: file['file_size'],
-              bytes: file['file_data'],
-              path: null, // Path is null since we're using bytes
-            ),
-          );
-        }
-
-        // Submit to server
-        bool result = await ApiService.submitPatientData(
-          crn: patient['crn'],
-          uhid: patient['uhid'],
-          patientName: patient['patient_name'],
-          dob: patient['dob'],
-          files: platformFiles,
-        );
-
-        if (result) {
-          // Mark as synced
-          await _localDB.markPatientAsSynced(patient['id']);
-          for (var file in patientFiles) {
-            await _localDB.markFileAsSynced(file['id']);
-          }
-        } else {
-          success = false;
+        // Mark all files for this patient as synced
+        final files = await _localDB.getFilesForPatient(patient['id']);
+        for (var file in files) {
+          await _localDB.markFileAsSynced(file['id']);
         }
       }
 
-      return success;
+      return true;
     } catch (e) {
-      print('Error syncing with server: $e');
+      print('Error in offline sync: $e');
       return false;
     }
   }

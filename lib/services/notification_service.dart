@@ -2,6 +2,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'dart:typed_data';
+import '../constants/app_constants.dart';
 
 class NotificationService {
   static final NotificationService _notificationService =
@@ -77,9 +78,9 @@ class NotificationService {
   }) async {
     AndroidNotificationDetails androidNotificationDetails =
         AndroidNotificationDetails(
-      'channel_id',
-      'channel_name',
-      channelDescription: 'channel_description',
+      AppConstants.notificationChannelId,
+      AppConstants.notificationChannelName,
+      channelDescription: AppConstants.notificationChannelDescription,
       importance: Importance.max,
       priority: Priority.high,
       ticker: 'ticker',
@@ -117,9 +118,9 @@ class NotificationService {
       tz.TZDateTime.from(scheduledTime, tz.local),
       const NotificationDetails(
         android: AndroidNotificationDetails(
-          'channel_id',
-          'channel_name',
-          channelDescription: 'channel_description',
+          AppConstants.notificationChannelId,
+          AppConstants.notificationChannelName,
+          channelDescription: AppConstants.notificationChannelDescription,
           importance: Importance.max,
           priority: Priority.high,
         ),
@@ -141,9 +142,9 @@ class NotificationService {
   }) async {
     final AndroidNotificationDetails androidNotificationDetails =
         AndroidNotificationDetails(
-      'channel_id',
-      'channel_name',
-      channelDescription: 'channel_description',
+      AppConstants.notificationChannelId,
+      AppConstants.notificationChannelName,
+      channelDescription: AppConstants.notificationChannelDescription,
       importance: Importance.max,
       priority: Priority.high,
       actions: <AndroidNotificationAction>[
@@ -188,9 +189,9 @@ class NotificationService {
   }) async {
     final AndroidNotificationDetails androidNotificationDetails =
         AndroidNotificationDetails(
-      'channel_id',
-      'channel_name',
-      channelDescription: 'channel_description',
+      AppConstants.notificationChannelId,
+      AppConstants.notificationChannelName,
+      channelDescription: AppConstants.notificationChannelDescription,
       importance: Importance.max,
       priority: Priority.high,
       progress: progress,
@@ -236,9 +237,9 @@ class NotificationService {
 
     final AndroidNotificationDetails androidNotificationDetails =
         AndroidNotificationDetails(
-      'channel_id',
-      'channel_name',
-      channelDescription: 'channel_description',
+      AppConstants.notificationChannelId,
+      AppConstants.notificationChannelName,
+      channelDescription: AppConstants.notificationChannelDescription,
       importance: Importance.max,
       priority: Priority.high,
       styleInformation: bigPictureStyleInformation,
@@ -305,9 +306,9 @@ class NotificationService {
   }) async {
     final AndroidNotificationDetails androidNotificationDetails =
         AndroidNotificationDetails(
-      'channel_id',
-      'channel_name',
-      channelDescription: 'channel_description',
+      AppConstants.notificationChannelId,
+      AppConstants.notificationChannelName,
+      channelDescription: AppConstants.notificationChannelDescription,
       importance: Importance.max,
       priority: Priority.high,
       groupKey: groupKey,

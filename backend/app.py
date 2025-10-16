@@ -16,11 +16,12 @@ app = Flask(__name__)
 CORS(app)
 
 # Configuration
-UPLOAD_FOLDER = 'uploads'
-ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'doc', 'docx'}
+UPLOAD_FOLDER = os.environ.get('UPLOAD_FOLDER', 'uploads')
+ALLOWED_EXTENSIONS = os.environ.get('ALLOWED_EXTENSIONS', 'txt,pdf,png,jpg,jpeg,gif,doc,docx').split(',')
+ALLOWED_EXTENSIONS = set(ALLOWED_EXTENSIONS)
 
 # File size limit configuration - can be changed as needed
-MAX_FILE_SIZE = os.environ.get('MAX_FILE_SIZE', 5 * 1024 * 1024)  # Default 5MB, configurable via environment variable
+MAX_FILE_SIZE = int(os.environ.get('MAX_FILE_SIZE', 5 * 1024 * 1024))  # Default 5MB, configurable via environment variable
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = MAX_FILE_SIZE
@@ -393,4 +394,9 @@ if __name__ == '__main__':
             db.session.add(sample_user)
             db.session.commit()
     
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    # Get host and port from environment variables with defaults
+    host = os.environ.get('HOST', '0.0.0.0')
+    port = int(os.environ.get('PORT', 5000))
+    debug = os.environ.get('FLASK_DEBUG', 'True').lower() == 'true'
+    
+    app.run(debug=debug, host=host, port=port)

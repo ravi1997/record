@@ -3,8 +3,10 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:open_file/open_file.dart';
 import 'package:flutter/services.dart' show PlatformException;
-import '../services/api_service.dart';
 import '../services/local_db_service.dart';
+import '../constants/app_constants.dart';
+import '../utils/ui_components.dart';
+import 'record_details_page.dart';
 
 class SearchPage extends StatefulWidget {
   const SearchPage({super.key});
@@ -15,13 +17,19 @@ class SearchPage extends StatefulWidget {
 
 class _SearchPageState extends State<SearchPage> {
   final TextEditingController _searchController = TextEditingController();
-// Changed to default to showing all records
+  final ScrollController _scrollController = ScrollController();
+  // Changed to default to showing all records
   List<Map<String, dynamic>> _searchResults = [];
   bool _isLoading = false;
+  int _currentPage = 0;
+  int _pageSize = 20;
+  bool _hasMoreResults = true;
 
   @override
   void initState() {
     super.initState();
+    // Initialize scroll controller
+    _scrollController.addListener(_scrollListener);
     // Load all records when the page initializes
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadAllRecords();
@@ -31,9 +39,8 @@ class _SearchPageState extends State<SearchPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Search Records'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+      appBar: UIComponents.buildAppBar(
+        title: 'Search Records',
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -152,9 +159,14 @@ class _SearchPageState extends State<SearchPage> {
 
             // Results section
             Expanded(
-              child: _searchResults.isEmpty
-                  ? _buildEmptyState()
-                  : _buildResultsList(),
+              child: NotificationListener<ScrollNotification>(
+                onNotification: (ScrollNotification scrollInfo) {
+                  return true;
+                },
+                child: _searchResults.isEmpty
+                    ? _buildEmptyState()
+                    : _buildResultsList(),
+              ),
             ),
           ],
         ),
@@ -199,8 +211,21 @@ class _SearchPageState extends State<SearchPage> {
 
   Widget _buildResultsList() {
     return ListView.builder(
-      itemCount: _searchResults.length,
+      controller: _scrollController,
+      itemCount: _searchResults.length + (_hasMoreResults ? 1 : 0),
       itemBuilder: (context, index) {
+        if (index == _searchResults.length) {
+          // Loading indicator for pagination
+          return _isLoading
+              ? const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: CircularProgressIndicator(),
+                  ),
+                )
+              : const SizedBox.shrink();
+        }
+
         final record = _searchResults[index];
         bool isSynced =
             record['synced'] == 1; // 1 means synced, 0 means not synced
@@ -336,16 +361,22 @@ class _SearchPageState extends State<SearchPage> {
     setState(() {
       _isLoading = true;
       _searchResults = []; // Clear previous results
+      _currentPage = 0;
+      _hasMoreResults = true;
     });
 
     try {
-      // Load all records from local database
+      // Load paginated records from local database
       final dbService = LocalDBService();
-      List<Map<String, dynamic>> results = await dbService.getAllPatients();
+      List<Map<String, dynamic>> results = await dbService.getPatientsPaginated(
+        offset: _currentPage * _pageSize,
+        limit: _pageSize,
+      );
 
       setState(() {
         _isLoading = false;
         _searchResults = results;
+        _hasMoreResults = results.length == _pageSize;
       });
     } catch (e) {
       setState(() {
@@ -381,6 +412,8 @@ class _SearchPageState extends State<SearchPage> {
     setState(() {
       _isLoading = true;
       _searchResults = [];
+      _currentPage = 0;
+      _hasMoreResults = true;
     });
 
     try {
@@ -426,6 +459,7 @@ class _SearchPageState extends State<SearchPage> {
       setState(() {
         _isLoading = false;
         _searchResults = results;
+        _hasMoreResults = results.length >= _pageSize;
       });
     } catch (e) {
       if (mounted) {
@@ -487,80 +521,30 @@ class _SearchPageState extends State<SearchPage> {
       },
     );
 
-    try {
-      // Call the sync API
-      var result = await ApiService.syncData();
+    // Simulate sync operation in offline mode
+    await Future.delayed(const Duration(seconds: 2));
 
-      // Close the loading dialog
-      Navigator.of(context).pop();
+    // Close the loading dialog
+    Navigator.of(context).pop();
 
-      if (result != null && result['success'] == true) {
-        if (mounted) {
-          // Show success message
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Row(
-                children: [
-                  const Icon(Icons.check_circle, color: Colors.white),
-                  const SizedBox(width: 8),
-                  Text('Sync successful! ${result['message']}'),
-                ],
-              ),
-              backgroundColor: Colors.green[700],
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-          );
-
-          // Reload records to show updated sync status
-          _loadAllRecords();
-        }
-      } else {
-        if (mounted) {
-          // Show error message
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Row(
-                children: [
-                  const Icon(Icons.warning, color: Colors.white),
-                  const SizedBox(width: 8),
-                  const Text('Sync failed. Please check your connection.'),
-                ],
-              ),
-              backgroundColor: Colors.red[700],
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      // Close the loading dialog
-      Navigator.of(context).pop();
-
-      if (mounted) {
-        // Show error message
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.warning, color: Colors.white),
-                const SizedBox(width: 8),
-                Text('Error during sync: ${e.toString()}'),
-              ],
-            ),
-            backgroundColor: Colors.red[700],
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
+    if (mounted) {
+      // Show offline sync message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.cloud_off, color: Colors.white),
+              const SizedBox(width: 8),
+              const Text('App is in offline mode. Data will sync when online.'),
+            ],
           ),
-        );
-      }
+          backgroundColor: Colors.orange[700],
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      );
     }
   }
 
@@ -574,54 +558,55 @@ class _SearchPageState extends State<SearchPage> {
     );
   }
 
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-}
-
-class RecordDetailsPage extends StatefulWidget {
-  final Map<String, dynamic> record;
-
-  const RecordDetailsPage({super.key, required this.record});
-
-  @override
-  State<RecordDetailsPage> createState() => _RecordDetailsPageState();
-}
-
-class _RecordDetailsPageState extends State<RecordDetailsPage> {
-  List<Map<String, dynamic>> _files = [];
-  bool _isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadFiles();
+  void _scrollListener() {
+    if (_scrollController.position.pixels ==
+            _scrollController.position.maxScrollExtent &&
+        !_isLoading &&
+        _hasMoreResults) {
+      _loadMoreRecords();
+    }
   }
 
-  void _loadFiles() async {
+  void _loadMoreRecords() async {
+    if (_isLoading) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
     try {
       final dbService = LocalDBService();
-      List<Map<String, dynamic>> files = await dbService.getFilesForPatient(
-        widget.record['id'],
+      List<Map<String, dynamic>> results = await dbService.getPatientsPaginated(
+        offset: (_currentPage + 1) * _pageSize,
+        limit: _pageSize,
       );
+
+      if (results.isEmpty) {
+        setState(() {
+          _hasMoreResults = false;
+          _isLoading = false;
+        });
+        return;
+      }
+
       setState(() {
-        _files = files;
+        _currentPage++;
+        _searchResults.addAll(results);
+        _hasMoreResults = results.length == _pageSize;
         _isLoading = false;
       });
     } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
       if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Row(
               children: [
                 const Icon(Icons.warning, color: Colors.white),
                 const SizedBox(width: 8),
-                Text('Error loading files: ${e.toString()}'),
+                Text('Error loading more records: ${e.toString()}'),
               ],
             ),
             backgroundColor: Colors.red[700],
@@ -636,239 +621,10 @@ class _RecordDetailsPageState extends State<RecordDetailsPage> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    bool isSynced = widget.record['synced'] == 1;
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Record Details'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Patient Information',
-                      style: Theme.of(context).textTheme.headlineSmall,
-                    ),
-                    const SizedBox(height: 16),
-                    _buildInfoRow(
-                      'Patient Name:',
-                      widget.record['patient_name'],
-                    ),
-                    _buildInfoRow('CRN:', widget.record['crn']),
-                    _buildInfoRow('UHID:', widget.record['uhid']),
-                    _buildInfoRow('Date of Birth:', widget.record['dob']),
-                    const SizedBox(height: 8),
-                    _buildInfoRow(
-                      'Sync Status:',
-                      isSynced ? 'Uploaded to Server' : 'Not Uploaded',
-                    ),
-                    if (!isSynced)
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.orange[100],
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          'This record has not been uploaded to the server yet',
-                          style: TextStyle(
-                            color: Colors.orange[800]!,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Attached Files',
-                      style: Theme.of(context).textTheme.headlineSmall,
-                    ),
-                    const SizedBox(height: 10),
-                    _isLoading
-                        ? const Center(child: CircularProgressIndicator())
-                        : _files.isEmpty
-                            ? const Text('No files attached to this record')
-                            : ListView.separated(
-                                shrinkWrap: true,
-                                physics: const NeverScrollableScrollPhysics(),
-                                itemCount: _files.length,
-                                separatorBuilder: (context, index) =>
-                                    const Divider(),
-                                itemBuilder: (context, index) {
-                                  Map<String, dynamic> file = _files[index];
-                                  return ListTile(
-                                    leading:
-                                        const Icon(Icons.insert_drive_file),
-                                    title: Text(file['filename']),
-                                    subtitle: Text(
-                                      '${(file['file_size'] / 1024 / 1024).toStringAsFixed(2)} MB',
-                                    ),
-                                    trailing: PopupMenuButton(
-                                      icon: const Icon(Icons.more_vert),
-                                      itemBuilder: (context) => [
-                                        const PopupMenuItem(
-                                          value: 'view',
-                                          child: Text('View'),
-                                        ),
-                                      ],
-                                      onSelected: (value) {
-                                        if (value == 'view') {
-                                          _viewFile(file);
-                                        }
-                                      },
-                                    ),
-                                    onTap: () {
-                                      _viewFile(file);
-                                    },
-                                  );
-                                },
-                              ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _viewFile(Map<String, dynamic> file) async {
-    try {
-      // Get the application documents directory
-      final directory = await getApplicationDocumentsDirectory();
-      final filePath = '${directory.path}/${file['filename']}';
-
-      // Write the file data to the device
-      final fileToSave = File(filePath);
-      if (file['file_data'] != null) {
-        await fileToSave.writeAsBytes(file['file_data']);
-      } else {
-        throw Exception('File data is null');
-      }
-
-      // Open the file
-      final result = await OpenFile.open(filePath);
-
-      if (mounted) {
-        if (result.type != ResultType.done) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Row(
-                children: [
-                  const Icon(Icons.warning, color: Colors.white),
-                  const SizedBox(width: 8),
-                  Text('Error opening file: ${result.message}'),
-                ],
-              ),
-              backgroundColor: Colors.red[700],
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-          );
-        }
-      }
-    } on PlatformException catch (e) {
-      // Handle platform-specific errors (like the path_provider error)
-      if (mounted) {
-        if (e.code == 'channel-error') {
-          // This typically means the plugin isn't properly initialized
-          // (often happens when app hasn't been rebuilt after adding plugins)
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Row(
-                children: [
-                  const Icon(Icons.warning, color: Colors.white),
-                  const SizedBox(width: 8),
-                  const Text(
-                    'Plugin not initialized. Please rebuild the app after adding new plugins.',
-                  ),
-                ],
-              ),
-              backgroundColor: Colors.orange[700],
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Row(
-                children: [
-                  const Icon(Icons.warning, color: Colors.white),
-                  const SizedBox(width: 8),
-                  Text('Platform error: ${e.message}'),
-                ],
-              ),
-              backgroundColor: Colors.red[700],
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.warning, color: Colors.white),
-                const SizedBox(width: 8),
-                Text('Error viewing file: ${e.toString()}'),
-              ],
-            ),
-            backgroundColor: Colors.red[700],
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-          ),
-        );
-      }
-    }
-  }
-
-  Widget _buildInfoRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 100,
-            child: Text(
-              label,
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-          ),
-          Expanded(child: Text(value)),
-        ],
-      ),
-    );
+  void dispose() {
+    _searchController.dispose();
+    _scrollController.removeListener(_scrollListener);
+    _scrollController.dispose();
+    super.dispose();
   }
 }

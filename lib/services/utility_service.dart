@@ -1,8 +1,12 @@
 import 'dart:io';
 import 'dart:math';
+import 'dart:convert';
+import 'dart:typed_data';
+import 'package:crypto/crypto.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:open_file/open_file.dart';
 import 'package:flutter/material.dart';
+import '../constants/app_constants.dart';
 
 class UtilityService {
   // Format file size in human readable format
@@ -25,7 +29,7 @@ class UtilityService {
   static String formatDateTime(DateTime dateTime) {
     final date = formatDate(dateTime);
     final time =
-        '${dateTime.hour}:${dateTime.minute.toString().padLeft(2, '0')}';
+        '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
     return '$date $time';
   }
 
@@ -51,30 +55,30 @@ class UtilityService {
 
   // Generate a random patient ID
   static String generatePatientId() {
-    final now = DateTime.now();
-    final timestamp = now.millisecondsSinceEpoch;
-    final random = (timestamp % 100000).toString().padLeft(5, '0');
-    return 'PAT$random';
+    final random = Random.secure();
+    final randomString = base64UrlEncode(
+            Uint8List.fromList(List.generate(6, (_) => random.nextInt(256))))
+        .substring(0, 6);
+    return 'PAT$randomString';
   }
 
   // Generate a random CRN (Case Record Number)
   static String generateCRN() {
     final now = DateTime.now();
-    final year = now.year.toString().substring(2);
-    final month = now.month.toString().padLeft(2, '0');
-    final day = now.day.toString().padLeft(2, '0');
-    final hour = now.hour.toString().padLeft(2, '0');
-    final minute = now.minute.toString().padLeft(2, '0');
-    final second = now.second.toString().padLeft(2, '0');
-    return '$year$month$day$hour$minute$second';
+    final random = Random.secure();
+    final randomSuffix = (random.nextInt(90000) + 10000).toString();
+    final prefix =
+        '${now.year.toString().substring(2)}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}';
+    return '$prefix$randomSuffix';
   }
 
   // Generate a random UHID (Unique Health Identifier)
   static String generateUHID() {
-    final now = DateTime.now();
-    final timestamp = now.millisecondsSinceEpoch;
-    final random = (timestamp % 1000000).toString().padLeft(6, '0');
-    return 'UH$random';
+    final random = Random.secure();
+    final randomString = base64UrlEncode(
+            Uint8List.fromList(List.generate(8, (_) => random.nextInt(256))))
+        .substring(0, 8);
+    return 'UH$randomString';
   }
 
   // Open a file with the default application
@@ -143,6 +147,12 @@ class UtilityService {
     final destinationFile = File(destinationPath);
 
     if (await sourceFile.exists()) {
+      // Create destination directory if it doesn't exist
+      final destinationDir = destinationFile.parent;
+      if (!await destinationDir.exists()) {
+        await destinationDir.create(recursive: true);
+      }
+
       await sourceFile.copy(destinationPath);
     } else {
       throw Exception('Source file does not exist: $sourcePath');
@@ -158,6 +168,12 @@ class UtilityService {
     final destinationFile = File(destinationPath);
 
     if (await sourceFile.exists()) {
+      // Create destination directory if it doesn't exist
+      final destinationDir = destinationFile.parent;
+      if (!await destinationDir.exists()) {
+        await destinationDir.create(recursive: true);
+      }
+
       await sourceFile.rename(destinationPath);
     } else {
       throw Exception('Source file does not exist: $sourcePath');
@@ -175,19 +191,8 @@ class UtilityService {
 
   // Check if file type is supported
   static bool isSupportedFileType(String fileName) {
-    final supportedTypes = [
-      'pdf',
-      'doc',
-      'docx',
-      'txt',
-      'jpg',
-      'jpeg',
-      'png',
-      'gif',
-    ];
-
     final extension = getFileExtension(fileName);
-    return supportedTypes.contains(extension);
+    return AppConstants.allowedFileExtensions.contains(extension);
   }
 
   // Show a snackbar with a message
@@ -201,7 +206,8 @@ class UtilityService {
         content: Text(message),
         backgroundColor: backgroundColor,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppConstants.borderRadius)),
       ),
     );
   }

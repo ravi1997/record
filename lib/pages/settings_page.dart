@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../constants/app_constants.dart';
+import '../utils/ui_components.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({Key? key}) : super(key: key);
@@ -15,13 +17,33 @@ class _SettingsPageState extends State<SettingsPage> {
   String _language = 'English';
 
   @override
+  void initState() {
+    super.initState();
+    _loadPreferences();
+  }
+
+  Future<void> _loadPreferences() async {
+    // In offline mode, we don't persist preferences
+    // Just use default values
+    setState(() {
+      _darkMode = false;
+      _notifications = true;
+      _biometricAuth = false;
+      _syncFrequency = 'Daily';
+      _language = 'English';
+    });
+  }
+
+  Future<void> _savePreferences() async {
+    // In offline mode, we don't persist preferences
+    // Changes are only kept in memory during the session
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Settings'),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
-        elevation: 0,
+      appBar: UIComponents.buildAppBar(
+        title: 'Settings',
       ),
       body: Container(
         padding: const EdgeInsets.all(16.0),
@@ -53,6 +75,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       (value) {
                         setState(() {
                           _darkMode = value;
+                          _savePreferences();
                         });
                       },
                     ),
@@ -64,6 +87,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       (value) {
                         setState(() {
                           _language = value!;
+                          _savePreferences();
                         });
                       },
                     ),
@@ -99,6 +123,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       (value) {
                         setState(() {
                           _notifications = value;
+                          _savePreferences();
                         });
                       },
                     ),
@@ -134,6 +159,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       (value) {
                         setState(() {
                           _biometricAuth = value;
+                          _savePreferences();
                         });
                       },
                     ),
@@ -177,6 +203,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       (value) {
                         setState(() {
                           _syncFrequency = value!;
+                          _savePreferences();
                         });
                       },
                     ),
@@ -304,7 +331,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
                 const SizedBox(height: 16),
                 const Text(
-                  "Syncing data with server...",
+                  "Syncing data...",
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                 ),
               ],
@@ -314,19 +341,19 @@ class _SettingsPageState extends State<SettingsPage> {
       },
     );
 
-    // Simulate sync process
+    // Simulate sync process in offline mode
     Future.delayed(const Duration(seconds: 2), () {
       Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Row(
             children: const [
-              Icon(Icons.check_circle, color: Colors.white),
+              Icon(Icons.cloud_off, color: Colors.white),
               SizedBox(width: 8),
-              Text('Data synced successfully!'),
+              Text('App is in offline mode. Data will sync when online.'),
             ],
           ),
-          backgroundColor: Colors.green[700],
+          backgroundColor: Colors.orange[700],
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
