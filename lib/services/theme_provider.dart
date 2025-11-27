@@ -16,6 +16,11 @@ class ThemeProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Public method to reload theme (for testing purposes)
+  Future<void> loadTheme() async {
+    _loadTheme();
+  }
+
   void toggleTheme(bool isDarkMode) {
     _themeMode = isDarkMode ? ThemeMode.dark : ThemeMode.light;
     _themeService.saveThemeMode(_themeMode);

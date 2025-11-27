@@ -17,7 +17,7 @@ class UIComponents {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
       ),
-      color: ThemeConstants.surfaceContainerLow,
+      color: ThemeConstants.lightColorScheme.surfaceContainerLow,
       clipBehavior: Clip.hardEdge,
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -79,7 +79,7 @@ class UIComponents {
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      color: ThemeConstants.surfaceContainerLow,
+      color: ThemeConstants.lightColorScheme.surfaceContainerLow,
       clipBehavior: Clip.hardEdge,
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
