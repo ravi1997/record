@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../constants/app_constants.dart';
 import '../constants/theme_constants.dart';
+import '../services/user_provider.dart';
 import '../utils/ui_components.dart';
 
 class LoginPage extends StatefulWidget {
@@ -369,6 +371,8 @@ class _LoginPageState extends State<LoginPage> {
       });
 
       if (loginSuccess) {
+        // Load user data
+        await Provider.of<UserProvider>(context, listen: false).loadUser();
         // Navigate to home page
         Navigator.pushReplacementNamed(context, AppConstants.homeRoute);
       } else {

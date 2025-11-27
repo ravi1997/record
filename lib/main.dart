@@ -7,14 +7,18 @@ import 'package:record/pages/search_page.dart';
 import 'package:record/pages/profile_page.dart';
 import 'package:record/pages/settings_page.dart';
 import 'package:record/services/theme_provider.dart';
+import 'package:record/services/user_provider.dart';
 import 'package:record/services/theme_service.dart';
 import 'constants/app_constants.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => ThemeProvider(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider(create: (_) => UserProvider()),
+      ],
       child: const MyApp(),
     ),
   );

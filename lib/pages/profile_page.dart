@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../services/user_provider.dart';
 import '../utils/ui_components.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -9,13 +11,36 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  final _nameController = TextEditingController(text: 'John Doe');
-  final _emailController = TextEditingController(text: 'john.doe@example.com');
-  final _phoneController = TextEditingController(text: '+1 (555) 123-4567');
-  final _employeeIdController = TextEditingController(text: 'EMP001');
+  final _nameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _employeeIdController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    final user = Provider.of<UserProvider>(context, listen: false).user;
+    if (user != null) {
+      _nameController.text = user.name;
+      _emailController.text = user.email;
+      _employeeIdController.text = user.employeeId;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final user = Provider.of<UserProvider>(context).user;
+
+    if (user == null) {
+      return Scaffold(
+        appBar: UIComponents.buildAppBar(
+          title: 'My Profile',
+        ),
+        body: const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: UIComponents.buildAppBar(
         title: 'My Profile',
@@ -61,14 +86,15 @@ class _ProfilePageState extends State<ProfilePage> {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  const Text(
-                    'John Doe',
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                  Text(
+                    user.name,
+                    style: const TextStyle(
+                        fontSize: 22, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 4),
-                  const Text(
-                    'Medical Records Administrator',
-                    style: TextStyle(fontSize: 16, color: Colors.grey),
+                  Text(
+                    user.role,
+                    style: const TextStyle(fontSize: 16, color: Colors.grey),
                   ),
                 ],
               ),
@@ -105,13 +131,6 @@ class _ProfilePageState extends State<ProfilePage> {
                       label: 'Email Address',
                       icon: Icons.email,
                       keyboardType: TextInputType.emailAddress,
-                    ),
-                    const SizedBox(height: 16),
-                    _buildTextField(
-                      controller: _phoneController,
-                      label: 'Phone Number',
-                      icon: Icons.phone,
-                      keyboardType: TextInputType.phone,
                     ),
                     const SizedBox(height: 16),
                     _buildTextField(
@@ -317,7 +336,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 // Handle password change
                 Navigator.of(context).pop();
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
+                  const SnackBar(
                     content: Text('Password changed successfully!'),
                     backgroundColor: Colors.green,
                   ),
@@ -367,7 +386,6 @@ class _ProfilePageState extends State<ProfilePage> {
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
-    _phoneController.dispose();
     _employeeIdController.dispose();
     super.dispose();
   }

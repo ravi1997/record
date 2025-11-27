@@ -1,8 +1,10 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'dart:math';
+import 'package:provider/provider.dart';
 import '../services/local_db_service.dart';
 import '../constants/app_constants.dart';
+import '../services/user_provider.dart';
 import '../utils/ui_components.dart';
 
 class HomePage extends StatefulWidget {
@@ -115,6 +117,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildDashboard() {
+    final user = Provider.of<UserProvider>(context).user;
     return SingleChildScrollView(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -122,7 +125,7 @@ class _HomePageState extends State<HomePage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Welcome Back!',
+              user == null ? 'Welcome Back!' : 'Welcome Back, ${user.name}!',
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
