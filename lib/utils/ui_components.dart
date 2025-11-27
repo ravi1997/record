@@ -29,7 +29,7 @@ class UIComponents {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.15),
+                    color: color.withAlpha(38),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(icon, color: color, size: 24),
@@ -91,7 +91,7 @@ class UIComponents {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.15),
+                  color: color.withAlpha(38),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(icon, color: color),
@@ -197,7 +197,7 @@ class UIComponents {
               color: ThemeConstants.lightColorScheme.primary, width: 2),
         ),
         filled: true,
-        fillColor: ThemeConstants.lightColorScheme.surfaceVariant,
+        fillColor: ThemeConstants.lightColorScheme.surfaceContainerHighest,
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       ),
@@ -227,7 +227,7 @@ class UIComponents {
               onPressed: onPressed,
               style: ThemeConstants.elevatedButtonStyle.copyWith(
                 backgroundColor: backgroundColor != null
-                    ? MaterialStateProperty.all(backgroundColor)
+                    ? WidgetStateProperty.all(backgroundColor)
                     : null,
               ),
               child: Text(
@@ -299,9 +299,40 @@ class UIComponents {
       elevation: 0,
       scrolledUnderElevation: 3,
       surfaceTintColor: Colors.transparent,
-      shadowColor: Colors.black.withOpacity(0.05),
+      shadowColor: Colors.black.withAlpha(13),
       centerTitle: true,
       actions: actions,
+    );
+  }
+
+  // Reusable Info Chip
+  static Widget buildInfoChip(String label, String value) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.grey[100],
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            '$label: ',
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: Colors.grey,
+            ),
+          ),
+          Flexible(
+            child: Text(
+              value,
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

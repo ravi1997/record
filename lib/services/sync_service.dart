@@ -1,6 +1,5 @@
 import 'package:file_picker/file_picker.dart';
 import '../services/local_db_service.dart';
-import '../services/api_service.dart';
 import '../constants/app_constants.dart';
 
 class SyncService {

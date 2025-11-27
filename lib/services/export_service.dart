@@ -5,7 +5,6 @@ import 'package:csv/csv.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import '../services/local_db_service.dart';
-import '../constants/app_constants.dart';
 
 class ExportService {
   // Export patient data to CSV
@@ -94,7 +93,7 @@ class ExportService {
                   style: pw.TextStyle(fontSize: 14, color: PdfColors.grey700),
                 ),
                 pw.SizedBox(height: 20),
-                pw.Table.fromTextArray(
+                pw.TableHelper.fromTextArray(
                   headers: [
                     'ID',
                     'CRN',

@@ -5,10 +5,10 @@ import '../constants/theme_constants.dart';
 import '../utils/ui_components.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({Key? key}) : super(key: key);
+  const LoginPage({super.key});
 
   @override
-  _LoginPageState createState() => _LoginPageState();
+  State<LoginPage> createState() => _LoginPageState();
 }
 
 class _LoginPageState extends State<LoginPage> {
@@ -70,7 +70,7 @@ class _LoginPageState extends State<LoginPage> {
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.black.withAlpha(26),
                         blurRadius: 10,
                         offset: const Offset(0, 5),
                       ),
@@ -85,8 +85,8 @@ class _LoginPageState extends State<LoginPage> {
                           height: 40,
                           width: double.infinity,
                           decoration: BoxDecoration(
-                            color:
-                                ThemeConstants.lightColorScheme.surfaceVariant,
+                            color: ThemeConstants
+                                .lightColorScheme.surfaceContainerHighest,
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Row(
@@ -315,13 +315,6 @@ class _LoginPageState extends State<LoginPage> {
           const SnackBar(
             content: Text('OTP sent successfully! (Offline mode)'),
             backgroundColor: Colors.green,
-          ),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to send OTP. Please try again.'),
-            backgroundColor: Colors.red,
           ),
         );
       }

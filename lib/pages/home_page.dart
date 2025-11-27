@@ -1,11 +1,12 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'dart:math';
 import '../services/local_db_service.dart';
-import '../services/sync_service.dart';
 import '../constants/app_constants.dart';
 import '../utils/ui_components.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({Key? key}) : super(key: key);
+  const HomePage({super.key});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -16,6 +17,7 @@ class _HomePageState extends State<HomePage> {
   int _totalRecords = 0;
   int _syncedRecords = 0;
   int _pendingRecords = 0;
+  int _selectedTimeRange = 0;
 
   @override
   void initState() {
@@ -26,21 +28,16 @@ class _HomePageState extends State<HomePage> {
   Future<void> _loadDashboardMetrics() async {
     try {
       final dbService = LocalDBService();
-      final syncService = SyncService();
 
-      // Get live counts from database
       final totalPatients = await dbService.getPatientCount();
       final syncedPatients = await dbService.getSyncedPatientCount();
       final totalFiles = await dbService.getFileCount();
       final syncedFiles = await dbService.getSyncedFileCount();
 
-      // Calculate metrics
       final totalRecords = totalPatients + totalFiles;
       final syncedRecords = syncedPatients + syncedFiles;
       final pendingRecords = totalRecords - syncedRecords;
 
-      // For today's entries, we would normally query by date
-      // For now, we'll use a simplified approach
       final todayEntries = totalPatients > 0 ? (totalPatients ~/ 10) + 1 : 0;
 
       setState(() {
@@ -50,169 +47,524 @@ class _HomePageState extends State<HomePage> {
         _pendingRecords = pendingRecords;
       });
     } catch (e) {
-      // In case of error, keep default values or show error state
-      print('Error loading dashboard metrics: $e');
+      if (kDebugMode) {
+        print('Error loading dashboard metrics: $e');
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: UIComponents.buildAppBar(
-        title: 'Dashboard',
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications),
-            onPressed: () {
-              // Show notifications
-            },
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(
+            'Dashboard',
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface,
+              fontWeight: FontWeight.w600,
+            ),
           ),
-          PopupMenuButton(
-            icon: const Icon(Icons.account_circle),
-            onSelected: (value) {
-              if (value == 'profile') {
-                Navigator.pushNamed(context, AppConstants.profileRoute);
-              } else if (value == 'settings') {
-                Navigator.pushNamed(context, AppConstants.settingsRoute);
-              } else if (value == 'logout') {
-                Navigator.pushReplacementNamed(
-                    context, AppConstants.loginRoute);
-              }
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(value: 'profile', child: Text('Profile')),
-              const PopupMenuItem(value: 'settings', child: Text('Settings')),
-              const PopupMenuItem(value: 'logout', child: Text('Logout')),
-            ],
-          ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Welcome Back!',
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-              ),
-              const SizedBox(height: AppConstants.spacingSmall),
-              Text(
-                AppConstants.appName,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-              ),
-              const SizedBox(height: AppConstants.spacingLarge),
-              // Stats Cards
-              Row(
-                children: [
-                  Expanded(
-                    child: UIComponents.buildStatCard(
-                      title: 'Today\'s Entries',
-                      value: '$_todayEntries',
-                      icon: Icons.calendar_today,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                  ),
-                  const SizedBox(width: AppConstants.defaultPadding),
-                  Expanded(
-                    child: UIComponents.buildStatCard(
-                      title: 'Total Records',
-                      value: '$_totalRecords',
-                      icon: Icons.inventory,
-                      color: Theme.of(context).colorScheme.secondary,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppConstants.spacingMedium),
-              Row(
-                children: [
-                  Expanded(
-                    child: UIComponents.buildStatCard(
-                      title: 'Synced',
-                      value: '$_syncedRecords',
-                      icon: Icons.cloud_done,
-                      color: Theme.of(context).colorScheme.tertiary,
-                    ),
-                  ),
-                  const SizedBox(width: AppConstants.defaultPadding),
-                  Expanded(
-                    child: UIComponents.buildStatCard(
-                      title: 'Pending',
-                      value: '$_pendingRecords',
-                      icon: Icons.cloud_off,
-                      color: Theme.of(context).colorScheme.error,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppConstants.spacingExtraLarge),
-              Text(
-                'Quick Actions',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-              ),
-              const SizedBox(height: AppConstants.spacingMedium),
-              // Action Cards
-              UIComponents.buildActionCard(
-                title: 'Add Patient Record',
-                subtitle: 'Create a new patient record with associated files',
-                icon: Icons.note_add,
-                color: Theme.of(context).colorScheme.primary,
-                onTap: () {
-                  Navigator.pushNamed(context, AppConstants.entryRoute);
-                },
-              ),
-              const SizedBox(height: AppConstants.spacingMedium),
-              UIComponents.buildActionCard(
-                title: 'Search Records',
-                subtitle: 'Find and manage existing patient records',
-                icon: Icons.search,
-                color: Theme.of(context).colorScheme.secondary,
-                onTap: () {
-                  Navigator.pushNamed(context, AppConstants.searchRoute);
-                },
-              ),
-              const SizedBox(height: AppConstants.spacingMedium),
-              UIComponents.buildActionCard(
-                title: 'My Profile',
-                subtitle: 'View and edit your profile information',
-                icon: Icons.person,
-                color: Theme.of(context).colorScheme.tertiary,
-                onTap: () {
+          backgroundColor: Theme.of(context).colorScheme.surface,
+          foregroundColor: Theme.of(context).colorScheme.onSurface,
+          elevation: 0,
+          scrolledUnderElevation: 3,
+          surfaceTintColor: Colors.transparent,
+          shadowColor: Colors.black.withAlpha(13),
+          centerTitle: true,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.notifications),
+              onPressed: () {},
+            ),
+            PopupMenuButton(
+              icon: const Icon(Icons.account_circle),
+              onSelected: (value) {
+                if (value == 'profile') {
                   Navigator.pushNamed(context, AppConstants.profileRoute);
-                },
-              ),
-              const SizedBox(height: AppConstants.spacingMedium),
-              UIComponents.buildActionCard(
-                title: 'Settings',
-                subtitle: 'Configure app preferences and sync settings',
-                icon: Icons.settings,
-                color: Theme.of(context).colorScheme.tertiaryContainer,
-                onTap: () {
+                } else if (value == 'settings') {
                   Navigator.pushNamed(context, AppConstants.settingsRoute);
-                },
-              ),
-              const SizedBox(height: AppConstants.spacingMedium),
-              UIComponents.buildActionCard(
-                title: 'Advanced Dashboard',
-                subtitle: 'View detailed analytics and metrics',
-                icon: Icons.dashboard,
-                color: Theme.of(context).colorScheme.primaryContainer,
-                onTap: () {
-                  Navigator.pushNamed(context, AppConstants.dashboardRoute);
-                },
-              ),
+                } else if (value == 'logout') {
+                  Navigator.pushReplacementNamed(
+                      context, AppConstants.loginRoute);
+                }
+              },
+              itemBuilder: (context) => [
+                const PopupMenuItem(value: 'profile', child: Text('Profile')),
+                const PopupMenuItem(value: 'settings', child: Text('Settings')),
+                const PopupMenuItem(value: 'logout', child: Text('Logout')),
+              ],
+            ),
+          ],
+          bottom: const TabBar(
+            tabs: [
+              Tab(icon: Icon(Icons.dashboard), text: 'Dashboard'),
+              Tab(icon: Icon(Icons.analytics), text: 'Analytics'),
             ],
           ),
+        ),
+        body: TabBarView(
+          children: [
+            _buildDashboard(),
+            _buildAnalytics(),
+          ],
         ),
       ),
     );
   }
+
+  Widget _buildDashboard() {
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Welcome Back!',
+              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+            const SizedBox(height: AppConstants.spacingSmall),
+            Text(
+              AppConstants.appName,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+            ),
+            const SizedBox(height: AppConstants.spacingLarge),
+            Row(
+              children: [
+                Expanded(
+                  child: UIComponents.buildStatCard(
+                    title: 'Today\'s Entries',
+                    value: '$_todayEntries',
+                    icon: Icons.calendar_today,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+                const SizedBox(width: AppConstants.defaultPadding),
+                Expanded(
+                  child: UIComponents.buildStatCard(
+                    title: 'Total Records',
+                    value: '$_totalRecords',
+                    icon: Icons.inventory,
+                    color: Theme.of(context).colorScheme.secondary,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppConstants.spacingMedium),
+            Row(
+              children: [
+                Expanded(
+                  child: UIComponents.buildStatCard(
+                    title: 'Synced',
+                    value: '$_syncedRecords',
+                    icon: Icons.cloud_done,
+                    color: Theme.of(context).colorScheme.tertiary,
+                  ),
+                ),
+                const SizedBox(width: AppConstants.defaultPadding),
+                Expanded(
+                  child: UIComponents.buildStatCard(
+                    title: 'Pending',
+                    value: '$_pendingRecords',
+                    icon: Icons.cloud_off,
+                    color: Theme.of(context).colorScheme.error,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppConstants.spacingExtraLarge),
+            Text(
+              'Quick Actions',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+            const SizedBox(height: AppConstants.spacingMedium),
+            UIComponents.buildActionCard(
+              title: 'Add Patient Record',
+              subtitle: 'Create a new patient record with associated files',
+              icon: Icons.note_add,
+              color: Theme.of(context).colorScheme.primary,
+              onTap: () {
+                Navigator.pushNamed(context, AppConstants.entryRoute);
+              },
+            ),
+            const SizedBox(height: AppConstants.spacingMedium),
+            UIComponents.buildActionCard(
+              title: 'Search Records',
+              subtitle: 'Find and manage existing patient records',
+              icon: Icons.search,
+              color: Theme.of(context).colorScheme.secondary,
+              onTap: () {
+                Navigator.pushNamed(context, AppConstants.searchRoute);
+              },
+            ),
+            const SizedBox(height: AppConstants.spacingMedium),
+            UIComponents.buildActionCard(
+              title: 'My Profile',
+              subtitle: 'View and edit your profile information',
+              icon: Icons.person,
+              color: Theme.of(context).colorScheme.tertiary,
+              onTap: () {
+                Navigator.pushNamed(context, AppConstants.profileRoute);
+              },
+            ),
+            const SizedBox(height: AppConstants.spacingMedium),
+            UIComponents.buildActionCard(
+              title: 'Settings',
+              subtitle: 'Configure app preferences and sync settings',
+              icon: Icons.settings,
+              color: Theme.of(context).colorScheme.tertiaryContainer,
+              onTap: () {
+                Navigator.pushNamed(context, AppConstants.settingsRoute);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAnalytics() {
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  _buildTimeRangeButton('Today', 0),
+                  _buildTimeRangeButton('Week', 1),
+                  _buildTimeRangeButton('Month', 2),
+                  _buildTimeRangeButton('Year', 3),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'Key Metrics',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+            const SizedBox(height: AppConstants.defaultPadding),
+            _buildMetricsGrid(),
+            const SizedBox(height: 24),
+            Text(
+              'Analytics Overview',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+            const SizedBox(height: AppConstants.defaultPadding),
+            _buildChartSection(),
+            const SizedBox(height: 24),
+            Text(
+              'Recent Activity',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+            const SizedBox(height: AppConstants.defaultPadding),
+            _buildActivityList(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTimeRangeButton(String label, int index) {
+    return UIComponents.buildTimeRangeButton(
+      label: label,
+      index: index,
+      selectedTimeRange: _selectedTimeRange,
+      onSelect: (selectedIndex) {
+        setState(() {
+          _selectedTimeRange = selectedIndex;
+        });
+      },
+    );
+  }
+
+  Widget _buildMetricsGrid() {
+    return GridView.count(
+      crossAxisCount: 2,
+      crossAxisSpacing: 16,
+      mainAxisSpacing: 16,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      children: [
+        _buildMetricCard(
+          'Total Records',
+          '1,248',
+          Icons.inventory,
+          Colors.blue,
+          '+12% from last month',
+        ),
+        _buildMetricCard(
+          'New Entries',
+          '42',
+          Icons.note_add,
+          Colors.green,
+          '+5% from yesterday',
+        ),
+        _buildMetricCard(
+          'Pending Sync',
+          '7',
+          Icons.cloud_off,
+          Colors.orange,
+          'Requires attention',
+        ),
+        _buildMetricCard(
+          'Storage Used',
+          '85%',
+          Icons.storage,
+          Colors.red,
+          '245 MB of 288 MB',
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMetricCard(
+    String title,
+    String value,
+    IconData icon,
+    Color color,
+    String subtitle,
+  ) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: color.withAlpha(26),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(icon, color: color, size: 24),
+                ),
+                const Spacer(),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[600],
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildChartSection() {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Monthly Record Trends',
+              style: TextStyle(
+                  fontSize: AppConstants.regularTextSize,
+                  fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              height: 200,
+              child: CustomPaint(painter: _ChartPainter(), child: Container()),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildLegendItem('New Records', Colors.blue),
+                _buildLegendItem('Synced', Colors.green),
+                _buildLegendItem('Pending', Colors.orange),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLegendItem(String label, Color color) {
+    return Row(
+      children: [
+        Container(
+          width: 12,
+          height: 12,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 4),
+        Text(label, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+      ],
+    );
+  }
+
+  Widget _buildActivityList() {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: 5,
+              separatorBuilder: (context, index) => const Divider(),
+              itemBuilder: (context, index) {
+                return ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.blue[50],
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.person,
+                      color: Colors.blue,
+                      size: 20,
+                    ),
+                  ),
+                  title: Text('Patient Record #${1248 - index}'),
+                  subtitle: Text(
+                    'Added ${DateTime.now().subtract(Duration(days: index)).day}/${DateTime.now().subtract(Duration(days: index)).month}/${DateTime.now().subtract(Duration(days: index)).year}',
+                  ),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                  onTap: () {},
+                );
+              },
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              height: 40,
+              child: OutlinedButton(
+                onPressed: () {},
+                child: const Text('View All Activity'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ChartPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..strokeWidth = 2
+      ..style = PaintingStyle.stroke;
+
+    final bluePaint = paint..color = Colors.blue;
+    final greenPaint = paint..color = Colors.green;
+    final orangePaint = paint..color = Colors.orange;
+
+    final gridPaint = Paint()
+      ..color = Colors.grey[300]!
+      ..strokeWidth = 0.5
+      ..style = PaintingStyle.stroke;
+
+    for (int i = 0; i <= 6; i++) {
+      final x = (size.width / 6) * i;
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), gridPaint);
+    }
+
+    for (int i = 0; i <= 4; i++) {
+      final y = (size.height / 4) * i;
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
+    }
+
+    final Random random = Random();
+    final List<Offset> bluePoints = [];
+    final List<Offset> greenPoints = [];
+    final List<Offset> orangePoints = [];
+
+    for (int i = 0; i <= 6; i++) {
+      final x = (size.width / 6) * i;
+      bluePoints.add(
+        Offset(x, size.height - (random.nextDouble() * size.height)),
+      );
+      greenPoints.add(
+        Offset(x, size.height - (random.nextDouble() * size.height)),
+      );
+      orangePoints.add(
+        Offset(x, size.height - (random.nextDouble() * size.height)),
+      );
+    }
+
+    for (int i = 0; i < bluePoints.length - 1; i++) {
+      canvas.drawLine(bluePoints[i], bluePoints[i + 1], bluePaint);
+    }
+
+    for (int i = 0; i < greenPoints.length - 1; i++) {
+      canvas.drawLine(greenPoints[i], greenPoints[i + 1], greenPaint);
+    }
+
+    for (int i = 0; i < orangePoints.length - 1; i++) {
+      canvas.drawLine(orangePoints[i], orangePoints[i + 1], orangePaint);
+    }
+
+    final pointPaint = Paint()
+      ..strokeWidth = 2
+      ..style = PaintingStyle.fill;
+
+    for (int i = 0; i < bluePoints.length; i++) {
+      canvas.drawCircle(bluePoints[i], 4, pointPaint..color = Colors.blue);
+      canvas.drawCircle(greenPoints[i], 4, pointPaint..color = Colors.green);
+      canvas.drawCircle(orangePoints[i], 4, pointPaint..color = Colors.orange);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }

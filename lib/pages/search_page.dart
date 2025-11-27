@@ -1,10 +1,5 @@
 import 'package:flutter/material.dart';
-import 'dart:io';
-import 'package:path_provider/path_provider.dart';
-import 'package:open_file/open_file.dart';
-import 'package:flutter/services.dart' show PlatformException;
 import '../services/local_db_service.dart';
-import '../constants/app_constants.dart';
 import '../utils/ui_components.dart';
 import 'record_details_page.dart';
 
@@ -295,13 +290,13 @@ class _SearchPageState extends State<SearchPage> {
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    Expanded(child: _buildInfoChip('CRN', record['crn'])),
+                    Expanded(child: UIComponents.buildInfoChip('CRN', record['crn'])),
                     const SizedBox(width: 8),
-                    Expanded(child: _buildInfoChip('UHID', record['uhid'])),
+                    Expanded(child: UIComponents.buildInfoChip('UHID', record['uhid'])),
                   ],
                 ),
                 const SizedBox(height: 8),
-                _buildInfoChip('DOB', record['dob']),
+                UIComponents.buildInfoChip('DOB', record['dob']),
                 const SizedBox(height: 12),
                 ElevatedButton.icon(
                   onPressed: () => _viewRecordDetails(record),
@@ -324,36 +319,6 @@ class _SearchPageState extends State<SearchPage> {
           ),
         );
       },
-    );
-  }
-
-  Widget _buildInfoChip(String label, String value) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.grey[100],
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            '$label: ',
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-              color: Colors.grey,
-            ),
-          ),
-          Flexible(
-            child: Text(
-              value,
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
-      ),
     );
   }
 

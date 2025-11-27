@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../constants/app_constants.dart';
 import '../utils/ui_components.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -14,9 +13,6 @@ class _ProfilePageState extends State<ProfilePage> {
   final _emailController = TextEditingController(text: 'john.doe@example.com');
   final _phoneController = TextEditingController(text: '+1 (555) 123-4567');
   final _employeeIdController = TextEditingController(text: 'EMP001');
-
-  bool _notifications = true;
-  bool _darkMode = false;
 
   @override
   Widget build(BuildContext context) {
@@ -123,54 +119,6 @@ class _ProfilePageState extends State<ProfilePage> {
                       label: 'Employee ID',
                       icon: Icons.badge,
                       readOnly: true,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Preferences Section
-            Card(
-              elevation: 2,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Preferences',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    SwitchListTile(
-                      title: const Text('Dark Mode'),
-                      subtitle: const Text('Enable dark theme'),
-                      value: _darkMode,
-                      onChanged: (value) {
-                        setState(() {
-                          _darkMode = value;
-                        });
-                      },
-                      activeColor: Colors.blue,
-                    ),
-                    const SizedBox(height: 8),
-                    SwitchListTile(
-                      title: const Text('Notifications'),
-                      subtitle: const Text('Receive alerts and updates'),
-                      value: _notifications,
-                      onChanged: (value) {
-                        setState(() {
-                          _notifications = value;
-                        });
-                      },
-                      activeColor: Colors.blue,
                     ),
                   ],
                 ),

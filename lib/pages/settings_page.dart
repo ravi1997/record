@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import '../constants/app_constants.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../services/theme_provider.dart';
 import '../utils/ui_components.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -10,7 +12,6 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  bool _darkMode = false;
   bool _notifications = true;
   bool _biometricAuth = false;
   String _syncFrequency = 'Daily';
@@ -23,24 +24,26 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _loadPreferences() async {
-    // In offline mode, we don't persist preferences
-    // Just use default values
+    final prefs = await SharedPreferences.getInstance();
     setState(() {
-      _darkMode = false;
-      _notifications = true;
-      _biometricAuth = false;
-      _syncFrequency = 'Daily';
-      _language = 'English';
+      _notifications = prefs.getBool('notifications') ?? true;
+      _biometricAuth = prefs.getBool('biometricAuth') ?? false;
+      _syncFrequency = prefs.getString('syncFrequency') ?? 'Daily';
+      _language = prefs.getString('language') ?? 'English';
     });
   }
 
   Future<void> _savePreferences() async {
-    // In offline mode, we don't persist preferences
-    // Changes are only kept in memory during the session
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('notifications', _notifications);
+    await prefs.setBool('biometricAuth', _biometricAuth);
+    await prefs.setString('syncFrequency', _syncFrequency);
+    await prefs.setString('language', _language);
   }
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
     return Scaffold(
       appBar: UIComponents.buildAppBar(
         title: 'Settings',
@@ -71,12 +74,9 @@ class _SettingsPageState extends State<SettingsPage> {
                     _buildSwitchListTile(
                       'Dark Mode',
                       'Enable dark theme',
-                      _darkMode,
+                      themeProvider.themeMode == ThemeMode.dark,
                       (value) {
-                        setState(() {
-                          _darkMode = value;
-                          _savePreferences();
-                        });
+                        themeProvider.toggleTheme(value);
                       },
                     ),
                     const SizedBox(height: 8),
@@ -291,7 +291,7 @@ class _SettingsPageState extends State<SettingsPage> {
       subtitle: Text(subtitle),
       value: value,
       onChanged: onChanged,
-      activeColor: Colors.blue,
+      activeTrackColor: Colors.blue,
     );
   }
 

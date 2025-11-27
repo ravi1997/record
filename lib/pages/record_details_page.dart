@@ -4,7 +4,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:open_file/open_file.dart';
 import 'package:flutter/services.dart' show PlatformException;
 import '../services/local_db_service.dart';
-import '../constants/app_constants.dart';
 import '../utils/ui_components.dart';
 
 class RecordDetailsPage extends StatefulWidget {
@@ -84,15 +83,15 @@ class _RecordDetailsPageState extends State<RecordDetailsPage> {
                       style: Theme.of(context).textTheme.headlineSmall,
                     ),
                     const SizedBox(height: 16),
-                    _buildInfoRow(
+                    UIComponents.buildInfoChip(
                       'Patient Name:',
                       widget.record['patient_name'],
                     ),
-                    _buildInfoRow('CRN:', widget.record['crn']),
-                    _buildInfoRow('UHID:', widget.record['uhid']),
-                    _buildInfoRow('Date of Birth:', widget.record['dob']),
+                    UIComponents.buildInfoChip('CRN:', widget.record['crn']),
+                    UIComponents.buildInfoChip('UHID:', widget.record['uhid']),
+                    UIComponents.buildInfoChip('Date of Birth:', widget.record['dob']),
                     const SizedBox(height: 8),
-                    _buildInfoRow(
+                    UIComponents.buildInfoChip(
                       'Sync Status:',
                       isSynced ? 'Uploaded to Server' : 'Not Uploaded',
                     ),
@@ -278,22 +277,5 @@ class _RecordDetailsPageState extends State<RecordDetailsPage> {
     }
   }
 
-  Widget _buildInfoRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 100,
-            child: Text(
-              label,
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-          ),
-          Expanded(child: Text(value)),
-        ],
-      ),
-    );
-  }
+
 }

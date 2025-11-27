@@ -5,10 +5,10 @@ class ThemeConstants {
   // Material 3 Color System - Using proper tonal palettes
   static const Color primaryColor = Color(0xFF006A6A); // Teal 700
   static const Color secondaryColor = Color(0xFF4F6363); // Green 700
-  static const Color accentColor = Color(0xFFD6810); // Orange 700
+  static const Color accentColor = Color(0xFFFFD6810); // Orange 700
   static const Color errorColor = Color(0xFFBA1A1A); // Red 600
   static const Color successColor = Color(0xFF006A6A); // Teal 700
-  static const Color warningColor = Color(0xFFD6810); // Orange 700
+  static const Color warningColor = Color(0xFFFFD6810); // Orange 700
   static const Color infoColor = Color(0xFF006A6A); // Teal 700
 
   // Surface colors based on Material 3 specifications
@@ -20,64 +20,64 @@ class ThemeConstants {
   // Material 3 Color Schemes
   static ColorScheme lightColorScheme = ColorScheme(
     brightness: Brightness.light,
-    primary: Color(0xFF006A6A),
-    onPrimary: Color(0xFFFFFFFF),
-    primaryContainer: Color(0xFF9CF0E9),
-    onPrimaryContainer: Color(0xFF00201F),
-    secondary: Color(0xFF4A6262),
-    onSecondary: Color(0xFFFFFFFF),
-    secondaryContainer: Color(0xFFCCE7E6),
-    onSecondaryContainer: Color(0xFF051F1F),
-    tertiary: Color(0xFF4B5D7D),
-    onTertiary: Color(0xFFFFFFFF),
-    tertiaryContainer: Color(0xFFD2E3FF),
-    onTertiaryContainer: Color(0xFF001936),
-    error: Color(0xFFBA1A1A),
-    onError: Color(0xFFFFFFFF),
-    errorContainer: Color(0xFFFFDAD6),
-    onErrorContainer: Color(0xFF410002),
-    surface: Color(0xFFFBFDFA),
-    onSurface: Color(0xFF191C1C),
-    surfaceVariant: Color(0xFFDAE5E4),
-    onSurfaceVariant: Color(0xFF3F4948),
-    outline: Color(0xFF6F7979),
-    outlineVariant: Color(0xFFBEC9C8),
-    scrim: Color(0xFF000000),
-    inverseSurface: Color(0xFF2D3131),
-    inversePrimary: Color(0xFF80D4CD),
-    surfaceTint: Color(0xFF006A6A),
-    shadow: Color(0xFF000000),
+    primary: const Color(0xFF006A6A),
+    onPrimary: const Color(0xFFFFFFFF),
+    primaryContainer: const Color(0xFF9CF0E9),
+    onPrimaryContainer: const Color(0xFF00201F),
+    secondary: const Color(0xFF4A6262),
+    onSecondary: const Color(0xFFFFFFFF),
+    secondaryContainer: const Color(0xFFCCE7E6),
+    onSecondaryContainer: const Color(0xFF051F1F),
+    tertiary: const Color(0xFF4B5D7D),
+    onTertiary: const Color(0xFFFFFFFF),
+    tertiaryContainer: const Color(0xFFD2E3FF),
+    onTertiaryContainer: const Color(0xFF001936),
+    error: const Color(0xFFBA1A1A),
+    onError: const Color(0xFFFFFFFF),
+    errorContainer: const Color(0xFFFFDAD6),
+    onErrorContainer: const Color(0xFF410002),
+    surface: const Color(0xFFFBFDFA),
+    onSurface: const Color(0xFF191C1C),
+    surfaceContainerHighest: const Color(0xFFDAE5E4),
+    onSurfaceVariant: const Color(0xFF3F4948),
+    outline: const Color(0xFF6F7979),
+    outlineVariant: const Color(0xFFBEC9C8),
+    scrim: const Color(0xFF000000),
+    inverseSurface: const Color(0xFF2D3131),
+    inversePrimary: const Color(0xFF80D4CD),
+    surfaceTint: const Color(0xFF006A6A),
+    shadow: const Color(0xFF000000),
   );
 
   static ColorScheme darkColorScheme = ColorScheme(
     brightness: Brightness.dark,
-    primary: Color(0xFF80D4CD),
-    onPrimary: Color(0xFF003735),
-    primaryContainer: Color(0xFF00504E),
-    onPrimaryContainer: Color(0xFF9CF0E9),
-    secondary: Color(0xFFB0CBCA),
-    onSecondary: Color(0xFF1B3534),
-    secondaryContainer: Color(0xFF324B4B),
-    onSecondaryContainer: Color(0xFFCCE7E6),
-    tertiary: Color(0xFFB1C7EB),
-    onTertiary: Color(0xFF1B304D),
-    tertiaryContainer: Color(0xFF324765),
-    onTertiaryContainer: Color(0xFFD2E3FF),
-    error: Color(0xFFBA1A1A),
-    onError: Color(0xFFFFFFFF),
-    errorContainer: Color(0xFFFFDAD6),
-    onErrorContainer: Color(0xFF410002),
-    surface: Color(0xFF11414),
-    onSurface: Color(0xFFE1E3E2),
-    surfaceVariant: Color(0xFF3F4948),
-    onSurfaceVariant: Color(0xFFBEC9C8),
-    outline: Color(0xFF899392),
-    outlineVariant: Color(0xFF3F4948),
-    scrim: Color(0xFF000000),
-    inverseSurface: Color(0xFFE1E3E2),
-    inversePrimary: Color(0xFF006A6A),
-    surfaceTint: Color(0xFF80D4CD),
-    shadow: Color(0xFF000000),
+    primary: const Color(0xFF80D4CD),
+    onPrimary: const Color(0xFF003735),
+    primaryContainer: const Color(0xFF00504E),
+    onPrimaryContainer: const Color(0xFF9CF0E9),
+    secondary: const Color(0xFFB0CBCA),
+    onSecondary: const Color(0xFF1B3534),
+    secondaryContainer: const Color(0xFF324B4B),
+    onSecondaryContainer: const Color(0xFFCCE7E6),
+    tertiary: const Color(0xFFB1C7EB),
+    onTertiary: const Color(0xFF1B304D),
+    tertiaryContainer: const Color(0xFF324765),
+    onTertiaryContainer: const Color(0xFFD2E3FF),
+    error: const Color(0xFFBA1A1A),
+    onError: const Color(0xFFFFFFFF),
+    errorContainer: const Color(0xFFFFDAD6),
+    onErrorContainer: const Color(0xFF410002),
+    surface: const Color(0xFF111414),
+    onSurface: const Color(0xFFE1E3E2),
+    surfaceContainerHighest: const Color(0xFF3F4948),
+    onSurfaceVariant: const Color(0xFFBEC9C8),
+    outline: const Color(0xFF899392),
+    outlineVariant: const Color(0xFF3F4948),
+    scrim: const Color(0xFF000000),
+    inverseSurface: const Color(0xFFE1E3E2),
+    inversePrimary: const Color(0xFF006A6A),
+    surfaceTint: const Color(0xFF80D4CD),
+    shadow: const Color(0xFF000000),
   );
 
   // App bar theme - Material 3 style with proper elevation and colors
@@ -87,7 +87,7 @@ class ThemeConstants {
     elevation: 0,
     centerTitle: true,
     scrolledUnderElevation: 3,
-    shadowColor: Colors.black.withOpacity(0.05),
+    shadowColor: Colors.black.withAlpha(13),
     surfaceTintColor: Colors.transparent,
     titleTextStyle: TextStyle(
       fontSize: 20,
@@ -100,33 +100,37 @@ class ThemeConstants {
   );
 
   // Button themes - Material 3 style with proper states and elevation
-  static ButtonStyle elevatedButtonStyle = ElevatedButton.styleFrom(
-    backgroundColor: lightColorScheme.primary,
-    foregroundColor: lightColorScheme.onPrimary,
-    elevation: 2,
-    shadowColor: lightColorScheme.primary.withOpacity(0.2),
-    surfaceTintColor: Colors.transparent,
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(24),
+  static ButtonStyle elevatedButtonStyle = ButtonStyle(
+    backgroundColor: WidgetStateProperty.all(lightColorScheme.primary),
+    foregroundColor: WidgetStateProperty.all(lightColorScheme.onPrimary),
+    elevation: WidgetStateProperty.all(2),
+    shadowColor: WidgetStateProperty.all(lightColorScheme.primary.withAlpha(51)),
+    surfaceTintColor: WidgetStateProperty.all(Colors.transparent),
+    shape: WidgetStateProperty.all(
+      RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24),
+      ),
     ),
-    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-    textStyle: const TextStyle(
-      fontSize: 14,
-      fontWeight: FontWeight.w500,
-      letterSpacing: 1.25,
+    padding: WidgetStateProperty.all(
+      const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
     ),
-  ).copyWith(
-    // Add Material 3 states
-    overlayColor: MaterialStateProperty.resolveWith<Color?>(
-      (Set<MaterialState> states) {
-        if (states.contains(MaterialState.pressed)) {
-          return lightColorScheme.onPrimary.withOpacity(0.1);
+    textStyle: WidgetStateProperty.all(
+      const TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.w500,
+        letterSpacing: 1.25,
+      ),
+    ),
+    overlayColor: WidgetStateProperty.resolveWith<Color?>(
+      (Set<WidgetState> states) {
+        if (states.contains(WidgetState.pressed)) {
+          return lightColorScheme.onPrimary.withAlpha(26);
         }
-        if (states.contains(MaterialState.hovered)) {
-          return lightColorScheme.onPrimary.withOpacity(0.08);
+        if (states.contains(WidgetState.hovered)) {
+          return lightColorScheme.onPrimary.withAlpha(20);
         }
-        if (states.contains(MaterialState.focused)) {
-          return lightColorScheme.onPrimary.withOpacity(0.1);
+        if (states.contains(WidgetState.focused)) {
+          return lightColorScheme.onPrimary.withAlpha(26);
         }
         return null;
       },
@@ -134,18 +138,18 @@ class ThemeConstants {
   );
 
   static ButtonStyle filledButtonStyle = ButtonStyle(
-    backgroundColor: MaterialStateProperty.all(lightColorScheme.primary),
-    foregroundColor: MaterialStateProperty.all(lightColorScheme.onPrimary),
-    elevation: MaterialStateProperty.all(0),
-    shape: MaterialStateProperty.all(
+    backgroundColor: WidgetStateProperty.all(lightColorScheme.primary),
+    foregroundColor: WidgetStateProperty.all(lightColorScheme.onPrimary),
+    elevation: WidgetStateProperty.all(0),
+    shape: WidgetStateProperty.all(
       RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(24),
       ),
     ),
-    padding: MaterialStateProperty.all(
+    padding: WidgetStateProperty.all(
       const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
     ),
-    textStyle: MaterialStateProperty.all(
+    textStyle: WidgetStateProperty.all(
       const TextStyle(
         fontSize: 14,
         fontWeight: FontWeight.w500,
@@ -154,16 +158,16 @@ class ThemeConstants {
     ),
   ).copyWith(
     // Add Material 3 states
-    overlayColor: MaterialStateProperty.resolveWith<Color?>(
-      (Set<MaterialState> states) {
-        if (states.contains(MaterialState.pressed)) {
-          return lightColorScheme.onPrimary.withOpacity(0.1);
+    overlayColor: WidgetStateProperty.resolveWith<Color?>(
+      (Set<WidgetState> states) {
+        if (states.contains(WidgetState.pressed)) {
+          return lightColorScheme.onPrimary.withAlpha(26);
         }
-        if (states.contains(MaterialState.hovered)) {
-          return lightColorScheme.onPrimary.withOpacity(0.08);
+        if (states.contains(WidgetState.hovered)) {
+          return lightColorScheme.onPrimary.withAlpha(20);
         }
-        if (states.contains(MaterialState.focused)) {
-          return lightColorScheme.onPrimary.withOpacity(0.1);
+        if (states.contains(WidgetState.focused)) {
+          return lightColorScheme.onPrimary.withAlpha(26);
         }
         return null;
       },
@@ -184,16 +188,16 @@ class ThemeConstants {
     ),
   ).copyWith(
     // Add Material 3 states
-    overlayColor: MaterialStateProperty.resolveWith<Color?>(
-      (Set<MaterialState> states) {
-        if (states.contains(MaterialState.pressed)) {
-          return lightColorScheme.primary.withOpacity(0.1);
+    overlayColor: WidgetStateProperty.resolveWith<Color?>(
+      (Set<WidgetState> states) {
+        if (states.contains(WidgetState.pressed)) {
+          return lightColorScheme.primary.withAlpha(26);
         }
-        if (states.contains(MaterialState.hovered)) {
-          return lightColorScheme.primary.withOpacity(0.08);
+        if (states.contains(WidgetState.hovered)) {
+          return lightColorScheme.primary.withAlpha(20);
         }
-        if (states.contains(MaterialState.focused)) {
-          return lightColorScheme.primary.withOpacity(0.1);
+        if (states.contains(WidgetState.focused)) {
+          return lightColorScheme.primary.withAlpha(26);
         }
         return null;
       },
@@ -213,16 +217,16 @@ class ThemeConstants {
     ),
   ).copyWith(
     // Add Material 3 states
-    overlayColor: MaterialStateProperty.resolveWith<Color?>(
-      (Set<MaterialState> states) {
-        if (states.contains(MaterialState.pressed)) {
-          return lightColorScheme.primary.withOpacity(0.1);
+    overlayColor: WidgetStateProperty.resolveWith<Color?>(
+      (Set<WidgetState> states) {
+        if (states.contains(WidgetState.pressed)) {
+          return lightColorScheme.primary.withAlpha(26);
         }
-        if (states.contains(MaterialState.hovered)) {
-          return lightColorScheme.primary.withOpacity(0.08);
+        if (states.contains(WidgetState.hovered)) {
+          return lightColorScheme.primary.withAlpha(20);
         }
-        if (states.contains(MaterialState.focused)) {
-          return lightColorScheme.primary.withOpacity(0.1);
+        if (states.contains(WidgetState.focused)) {
+          return lightColorScheme.primary.withAlpha(26);
         }
         return null;
       },
@@ -232,7 +236,7 @@ class ThemeConstants {
   // Input decoration theme - Material 3 style with proper states
   static InputDecorationTheme inputDecorationTheme = InputDecorationTheme(
     filled: true,
-    fillColor: lightColorScheme.surfaceVariant,
+    fillColor: lightColorScheme.surfaceContainerHighest,
     border: OutlineInputBorder(
       borderRadius: BorderRadius.circular(12),
       borderSide: BorderSide.none,
@@ -263,7 +267,7 @@ class ThemeConstants {
       borderRadius: BorderRadius.circular(16),
     ),
     elevation: 1,
-    shadowColor: Colors.black.withOpacity(0.05),
+    shadowColor: Colors.black.withAlpha(13),
     surfaceTintColor: Colors.transparent,
   );
 

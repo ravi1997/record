@@ -1,8 +1,6 @@
-import 'dart:typed_data';
 import 'package:sqflite/sqflite.dart';
 import 'local_db_service.dart';
 import 'package:file_picker/file_picker.dart';
-import '../constants/app_constants.dart';
 
 class DataService {
   final LocalDBService _localDB = LocalDBService();

@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import '../services/data_service.dart';
-import '../constants/app_constants.dart';
 import '../utils/ui_components.dart';
 
 class EntryPage extends StatefulWidget {
-  const EntryPage({Key? key}) : super(key: key);
+  const EntryPage({super.key});
 
   @override
-  _EntryPageState createState() => _EntryPageState();
+  State<EntryPage> createState() => _EntryPageState();
 }
 
 class _EntryPageState extends State<EntryPage> {
@@ -19,8 +18,8 @@ class _EntryPageState extends State<EntryPage> {
   final _dobController = TextEditingController();
 
   List<PlatformFile> _selectedFiles = [];
-  int _maxFiles = 5;
-  double _maxFileSizeMB = 5.0; // 5MB
+  final int _maxFiles = 5;
+  final double _maxFileSizeMB = 5.0; // 5MB
 
   @override
   Widget build(BuildContext context) {
@@ -246,7 +245,7 @@ class _EntryPageState extends State<EntryPage> {
                                 ),
                               ),
                             );
-                          }).toList(),
+                          }),
                         ],
                       ),
 

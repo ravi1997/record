@@ -70,7 +70,6 @@ class AppConstants {
   static const String searchRoute = '/search';
   static const String profileRoute = '/profile';
   static const String settingsRoute = '/settings';
-  static const String dashboardRoute = '/dashboard';
 
   // Theme Configuration
   static const String defaultThemeId = 'light_blue';

@@ -1,7 +1,5 @@
 // Offline API Service - Mock implementation for offline mode
-import 'dart:convert';
 import 'package:file_picker/file_picker.dart';
-import 'package:archive/archive.dart';
 import '../constants/app_constants.dart';
 
 class ApiService {

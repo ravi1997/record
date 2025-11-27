@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../constants/app_constants.dart';
 import '../constants/theme_constants.dart';
 
@@ -44,8 +45,17 @@ class ThemeService {
   }
 
   // Get current theme mode
-  ThemeMode getCurrentThemeMode() {
+  Future<ThemeMode> getCurrentThemeMode() async {
+    await loadThemeMode();
     return _currentThemeMode;
+  }
+
+  // Load theme mode from preferences
+  Future<void> loadThemeMode() async {
+    final prefs = await SharedPreferences.getInstance();
+    final bool isDarkMode = prefs.getBool('darkMode') ?? false;
+    _currentThemeMode = isDarkMode ? ThemeMode.dark : ThemeMode.light;
+    themeModeNotifier.value = _currentThemeMode;
   }
 
   // Save theme preference
@@ -54,9 +64,11 @@ class ThemeService {
   }
 
   // Save theme mode preference
-  void saveThemeMode(ThemeMode themeMode) {
+  void saveThemeMode(ThemeMode themeMode) async {
     _currentThemeMode = themeMode;
     themeModeNotifier.value = themeMode;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('darkMode', themeMode == ThemeMode.dark);
   }
 
   // Get theme by ID
@@ -128,7 +140,7 @@ final ThemeData lightGreenTheme = ThemeData(
   ),
   elevatedButtonTheme: ElevatedButtonThemeData(
     style: ThemeConstants.elevatedButtonStyle.copyWith(
-      backgroundColor: MaterialStateProperty.all(ThemeConstants.secondaryColor),
+      backgroundColor: WidgetStateProperty.all(ThemeConstants.secondaryColor),
     ),
   ),
 );
@@ -144,7 +156,7 @@ final ThemeData darkGreenTheme = ThemeData(
   ),
   elevatedButtonTheme: ElevatedButtonThemeData(
     style: ThemeConstants.elevatedButtonStyle.copyWith(
-      backgroundColor: MaterialStateProperty.all(ThemeConstants.secondaryColor),
+      backgroundColor: WidgetStateProperty.all(ThemeConstants.secondaryColor),
     ),
   ),
 );
