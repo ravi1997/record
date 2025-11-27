@@ -1,84 +1,11 @@
 import 'package:flutter/material.dart';
+import 'app_colors.dart';
 
 // Theme Constants with Material 3 Guidelines
 class ThemeConstants {
-  // Material 3 Color System - Using proper tonal palettes
-  static const Color primaryColor = Color(0xFF006A6A); // Teal 700
-  static const Color secondaryColor = Color(0xFF4F6363); // Green 700
-  static const Color accentColor = Color(0xFFFFD6810); // Orange 700
-  static const Color errorColor = Color(0xFFBA1A1A); // Red 600
-  static const Color successColor = Color(0xFF006A6A); // Teal 700
-  static const Color warningColor = Color(0xFFFFD6810); // Orange 700
-  static const Color infoColor = Color(0xFF006A6A); // Teal 700
-
-  // Surface colors based on Material 3 specifications
-  static const Color backgroundColor = Color(0xFFFBFDFA); // Light surface
-  static const Color surfaceColor = Color(0xFFFBFDFA); // Light surface
-  static const Color onBackgroundColor = Color(0xFF191C1C); // Light on surface
-  static const Color onSurfaceColor = Color(0xFF191C1C); // Light on surface
-
   // Material 3 Color Schemes
-  static ColorScheme lightColorScheme = ColorScheme(
-    brightness: Brightness.light,
-    primary: const Color(0xFF006A6A),
-    onPrimary: const Color(0xFFFFFFFF),
-    primaryContainer: const Color(0xFF9CF0E9),
-    onPrimaryContainer: const Color(0xFF00201F),
-    secondary: const Color(0xFF4A6262),
-    onSecondary: const Color(0xFFFFFFFF),
-    secondaryContainer: const Color(0xFFCCE7E6),
-    onSecondaryContainer: const Color(0xFF051F1F),
-    tertiary: const Color(0xFF4B5D7D),
-    onTertiary: const Color(0xFFFFFFFF),
-    tertiaryContainer: const Color(0xFFD2E3FF),
-    onTertiaryContainer: const Color(0xFF001936),
-    error: const Color(0xFFBA1A1A),
-    onError: const Color(0xFFFFFFFF),
-    errorContainer: const Color(0xFFFFDAD6),
-    onErrorContainer: const Color(0xFF410002),
-    surface: const Color(0xFFFBFDFA),
-    onSurface: const Color(0xFF191C1C),
-    surfaceContainerHighest: const Color(0xFFDAE5E4),
-    onSurfaceVariant: const Color(0xFF3F4948),
-    outline: const Color(0xFF6F7979),
-    outlineVariant: const Color(0xFFBEC9C8),
-    scrim: const Color(0xFF000000),
-    inverseSurface: const Color(0xFF2D3131),
-    inversePrimary: const Color(0xFF80D4CD),
-    surfaceTint: const Color(0xFF006A6A),
-    shadow: const Color(0xFF000000),
-  );
-
-  static ColorScheme darkColorScheme = ColorScheme(
-    brightness: Brightness.dark,
-    primary: const Color(0xFF80D4CD),
-    onPrimary: const Color(0xFF003735),
-    primaryContainer: const Color(0xFF00504E),
-    onPrimaryContainer: const Color(0xFF9CF0E9),
-    secondary: const Color(0xFFB0CBCA),
-    onSecondary: const Color(0xFF1B3534),
-    secondaryContainer: const Color(0xFF324B4B),
-    onSecondaryContainer: const Color(0xFFCCE7E6),
-    tertiary: const Color(0xFFB1C7EB),
-    onTertiary: const Color(0xFF1B304D),
-    tertiaryContainer: const Color(0xFF324765),
-    onTertiaryContainer: const Color(0xFFD2E3FF),
-    error: const Color(0xFFBA1A1A),
-    onError: const Color(0xFFFFFFFF),
-    errorContainer: const Color(0xFFFFDAD6),
-    onErrorContainer: const Color(0xFF410002),
-    surface: const Color(0xFF111414),
-    onSurface: const Color(0xFFE1E3E2),
-    surfaceContainerHighest: const Color(0xFF3F4948),
-    onSurfaceVariant: const Color(0xFFBEC9C8),
-    outline: const Color(0xFF899392),
-    outlineVariant: const Color(0xFF3F4948),
-    scrim: const Color(0xFF000000),
-    inverseSurface: const Color(0xFFE1E3E2),
-    inversePrimary: const Color(0xFF006A6A),
-    surfaceTint: const Color(0xFF80D4CD),
-    shadow: const Color(0xFF000000),
-  );
+  static ColorScheme lightColorScheme = AppColors.lightColorScheme;
+  static ColorScheme darkColorScheme = AppColors.darkColorScheme;
 
   // App bar theme - Material 3 style with proper elevation and colors
   static AppBarTheme appBarTheme = AppBarTheme(
@@ -364,10 +291,4 @@ class ThemeConstants {
       color: lightColorScheme.onSurface,
     ).apply(fontFamily: 'Roboto'),
   );
-
-  // Surface container colors for Material 3 hierarchy
-  static Color surfaceContainerLow = const Color(0xFFF3F6F5);
-  static Color surfaceContainer = const Color(0xFFEDEFEF);
-  static Color surfaceContainerHigh = const Color(0xFFE7EAE9);
-  static Color surfaceContainerHighest = const Color(0xFFE1E3E2);
 }

@@ -6,30 +6,30 @@ import '../services/local_db_service.dart';
 import '../constants/app_constants.dart';
 import '../services/user_provider.dart';
 import '../utils/ui_components.dart';
+import '../services/logging_service.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  final LocalDBService localDBService;
+
+  const HomePage({super.key, required this.localDBService});
 
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  int _todayEntries = 0;
-  int _totalRecords = 0;
-  int _syncedRecords = 0;
-  int _pendingRecords = 0;
   int _selectedTimeRange = 0;
+  late Future<Map<String, int>> _dashboardMetrics;
 
   @override
   void initState() {
     super.initState();
-    _loadDashboardMetrics();
+    _dashboardMetrics = _loadDashboardMetrics();
   }
 
-  Future<void> _loadDashboardMetrics() async {
+  Future<Map<String, int>> _loadDashboardMetrics() async {
     try {
-      final dbService = LocalDBService();
+      final dbService = widget.localDBService;
 
       final totalPatients = await dbService.getPatientCount();
       final syncedPatients = await dbService.getSyncedPatientCount();
@@ -42,16 +42,17 @@ class _HomePageState extends State<HomePage> {
 
       final todayEntries = totalPatients > 0 ? (totalPatients ~/ 10) + 1 : 0;
 
-      setState(() {
-        _todayEntries = todayEntries;
-        _totalRecords = totalRecords;
-        _syncedRecords = syncedRecords;
-        _pendingRecords = pendingRecords;
-      });
+      return {
+        'todayEntries': todayEntries,
+        'totalRecords': totalRecords,
+        'syncedRecords': syncedRecords,
+        'pendingRecords': pendingRecords,
+      };
     } catch (e) {
       if (kDebugMode) {
-        print('Error loading dashboard metrics: $e');
+        LoggingService.error('Error loading dashboard metrics: $e');
       }
+      rethrow;
     }
   }
 
@@ -138,48 +139,66 @@ class _HomePageState extends State<HomePage> {
                   ),
             ),
             const SizedBox(height: AppConstants.spacingLarge),
-            Row(
-              children: [
-                Expanded(
-                  child: UIComponents.buildStatCard(
-                    title: 'Today\'s Entries',
-                    value: '$_todayEntries',
-                    icon: Icons.calendar_today,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                ),
-                const SizedBox(width: AppConstants.defaultPadding),
-                Expanded(
-                  child: UIComponents.buildStatCard(
-                    title: 'Total Records',
-                    value: '$_totalRecords',
-                    icon: Icons.inventory,
-                    color: Theme.of(context).colorScheme.secondary,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppConstants.spacingMedium),
-            Row(
-              children: [
-                Expanded(
-                  child: UIComponents.buildStatCard(
-                    title: 'Synced',
-                    value: '$_syncedRecords',
-                    icon: Icons.cloud_done,
-                    color: Theme.of(context).colorScheme.tertiary,
-                  ),
-                ),
-                const SizedBox(width: AppConstants.defaultPadding),
-                Expanded(
-                  child: UIComponents.buildStatCard(
-                    title: 'Pending',
-                    value: '$_pendingRecords',
-                    icon: Icons.cloud_off,
-                    color: Theme.of(context).colorScheme.error,
-                  ),
-                ),
-              ],
+            FutureBuilder<Map<String, int>>(
+              future: _dashboardMetrics,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                } else if (snapshot.hasError) {
+                  return const Center(child: Text('Error loading metrics'));
+                } else if (snapshot.hasData) {
+                  final metrics = snapshot.data!;
+                  return Column(
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: UIComponents.buildStatCard(
+                              title: 'Today\'s Entries',
+                              value: '${metrics['todayEntries']}',
+                              icon: Icons.calendar_today,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                          ),
+                          const SizedBox(width: AppConstants.defaultPadding),
+                          Expanded(
+                            child: UIComponents.buildStatCard(
+                              title: 'Total Records',
+                              value: '${metrics['totalRecords']}',
+                              icon: Icons.inventory,
+                              color: Theme.of(context).colorScheme.secondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: AppConstants.spacingMedium),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: UIComponents.buildStatCard(
+                              title: 'Synced',
+                              value: '${metrics['syncedRecords']}',
+                              icon: Icons.cloud_done,
+                              color: Theme.of(context).colorScheme.tertiary,
+                            ),
+                          ),
+                          const SizedBox(width: AppConstants.defaultPadding),
+                          Expanded(
+                            child: UIComponents.buildStatCard(
+                              title: 'Pending',
+                              value: '${metrics['pendingRecords']}',
+                              icon: Icons.cloud_off,
+                              color: Theme.of(context).colorScheme.error,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  );
+                } else {
+                  return const SizedBox();
+                }
+              },
             ),
             const SizedBox(height: AppConstants.spacingExtraLarge),
             Text(

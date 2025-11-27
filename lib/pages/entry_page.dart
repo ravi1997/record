@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import '../exceptions/data_exception.dart';
 import '../services/data_service.dart';
+import '../services/error_handling_service.dart';
 import '../utils/ui_components.dart';
 
 class EntryPage extends StatefulWidget {
@@ -381,9 +383,8 @@ class _EntryPageState extends State<EntryPage> {
         }
       }
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error picking files: $e')));
+      ErrorHandlingService.showErrorDialog(
+          context, 'Error picking files', e.toString());
     }
   }
 
@@ -454,25 +455,14 @@ class _EntryPageState extends State<EntryPage> {
         setState(() {
           _selectedFiles = [];
         });
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Error saving patient data. Please try again.'),
-            backgroundColor: Colors.red,
-          ),
-        );
       }
-    } catch (e) {
+    } on DataException catch (e) {
       // Close the loading dialog
       Navigator.of(context).pop();
 
       // Show error message
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error saving patient data: ${e.toString()}'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      ErrorHandlingService.showErrorDialog(
+          context, 'Error saving patient data', e.message);
     }
   }
 

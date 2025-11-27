@@ -6,6 +6,7 @@ import 'package:record/pages/entry_page.dart';
 import 'package:record/pages/search_page.dart';
 import 'package:record/pages/profile_page.dart';
 import 'package:record/pages/settings_page.dart';
+import 'package:record/services/local_db_service.dart';
 import 'package:record/services/theme_provider.dart';
 import 'package:record/services/user_provider.dart';
 import 'package:record/services/theme_service.dart';
@@ -13,11 +14,13 @@ import 'constants/app_constants.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  final localDBService = LocalDBService();
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => UserProvider()),
+        Provider<LocalDBService>(create: (_) => localDBService),
       ],
       child: const MyApp(),
     ),
@@ -31,10 +34,11 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final themeService = ThemeService();
+    final localDBService = Provider.of<LocalDBService>(context);
 
     final routes = <String, WidgetBuilder>{
       AppConstants.loginRoute: (context) => const LoginPage(),
-      AppConstants.homeRoute: (context) => const HomePage(),
+      AppConstants.homeRoute: (context) => HomePage(localDBService: localDBService),
       AppConstants.entryRoute: (context) => const EntryPage(),
       AppConstants.searchRoute: (context) => const SearchPage(),
       AppConstants.profileRoute: (context) => const ProfilePage(),

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../constants/app_colors.dart';
 import '../constants/app_constants.dart';
 import '../constants/theme_constants.dart';
 import '../services/user_provider.dart';
@@ -37,11 +38,11 @@ class _LoginPageState extends State<LoginPage> {
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xFF006A6A), Color(0xFF004D4D)],
+            colors: [AppColors.primary, AppColors.primary.withOpacity(0.8)],
           ),
         ),
         child: SafeArea(
@@ -51,7 +52,7 @@ class _LoginPageState extends State<LoginPage> {
               children: [
                 const Spacer(flex: 1),
                 // App logo/title
-                Icon(Icons.medical_services,
+                const Icon(Icons.medical_services,
                     size: AppConstants.largeIconSize, color: Colors.white),
                 const SizedBox(height: AppConstants.defaultPadding),
                 Text(
@@ -314,9 +315,9 @@ class _LoginPageState extends State<LoginPage> {
         _startCountdown();
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('OTP sent successfully! (Offline mode)'),
-            backgroundColor: Colors.green,
+          SnackBar(
+            content: const Text('OTP sent successfully! (Offline mode)'),
+            backgroundColor: AppColors.success,
           ),
         );
       }
@@ -372,14 +373,14 @@ class _LoginPageState extends State<LoginPage> {
 
       if (loginSuccess) {
         // Load user data
-        await Provider.of<UserProvider>(context, listen: false).loadUser();
+        Provider.of<UserProvider>(context, listen: false).loadUser();
         // Navigate to home page
-        Navigator.pushReplacementNamed(context, AppConstants.homeRoute);
+        Navigator.pushNamed(context, AppConstants.homeRoute);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Login failed. Please check your credentials.'),
-            backgroundColor: Colors.red,
+          SnackBar(
+            content: const Text('Login failed. Please check your credentials.'),
+            backgroundColor: AppColors.error,
           ),
         );
       }

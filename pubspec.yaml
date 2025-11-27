@@ -44,6 +44,7 @@ dependencies:
   csv: ^6.0.0
   pdf: ^3.11.3
   provider: ^6.1.5+1
+  logger: ^2.6.2
 
 
 dev_dependencies:
@@ -59,6 +60,9 @@ dev_dependencies:
   shared_preferences: ^2.5.3
   path: ^1.9.1
   crypto: ^3.0.7
+  mockito: ^5.6.1
+  build_runner: ^2.10.4
+  sqflite_common_ffi: ^2.4.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

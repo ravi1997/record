@@ -1,4 +1,5 @@
 import 'package:sqflite/sqflite.dart';
+import '../exceptions/data_exception.dart';
 import 'local_db_service.dart';
 import 'package:file_picker/file_picker.dart';
 
@@ -55,13 +56,12 @@ class DataService {
       return synced; // Propagate sync status
     } on Exception catch (e) {
       // Handle database-specific errors like duplicate CRN
-      print('Error submitting patient data: $e');
-      return false;
+      throw DataException('Error submitting patient data: $e');
     }
   }
 
   // Search patients - first check local database, then server if needed
-  Future<List<Map<String, dynamic>>?> searchPatients({
+  Future<List<Map<String, dynamic>>> searchPatients({
     required String searchType,
     required String searchTerm,
   }) async {
@@ -96,8 +96,7 @@ class DataService {
 
       return results;
     } catch (e) {
-      print('Error searching patients: $e');
-      return null;
+      throw DataException('Error searching patients: $e');
     }
   }
 
@@ -125,8 +124,7 @@ class DataService {
 
       return null;
     } catch (e) {
-      print('Error getting patient details: $e');
-      return null;
+      throw DataException('Error getting patient details: $e');
     }
   }
 
@@ -153,8 +151,7 @@ class DataService {
 
       return true;
     } catch (e) {
-      print('Error in offline sync: $e');
-      return false;
+      throw DataException('Error in offline sync: $e');
     }
   }
 
